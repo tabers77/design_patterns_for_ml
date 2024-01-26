@@ -1,0 +1,9 @@
+# Local files
+debugger.py
+../.idea/
+.idea/
+__pycache__/
+
+# Local folders
+
+/my_env
