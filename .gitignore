@@ -5,5 +5,4 @@ debugger.py
 __pycache__/
 
 # Local folders
-
 /my_env
