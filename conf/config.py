@@ -15,7 +15,31 @@ class GlobalConfigs:
 
 
 class SplitConfigs:
-    test_size = 0.20
+    def __init__(self, target_col_name=None, train_size=0.20):
+        self.target_col_name = target_col_name
+        self.train_size = train_size
+
+
+# Singleton for Model Configuration Management
+class ModelConfig:
+    _instance = None
+    _config = {}
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(ModelConfig, cls).__new__(cls)
+        return cls._instance
+
+    def set_config(self, model_name, **kwargs):
+        self._config[model_name] = kwargs
+
+    def get_config(self, model_name):
+        return self._config.get(model_name, {})
+
+
+# Usage
+config_manager = ModelConfig()
+config_manager.set_config("RandomForest", n_estimators=100, max_depth=None)  # Adjust parameters as needed
 
 
 @dataclass_json
