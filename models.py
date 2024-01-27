@@ -7,7 +7,6 @@ import conf.config as cfg
 
 
 # TEMPLATE PATTERN
-
 class BaseModel:
 
     def execute_pipeline_steps(self, data, configs):
