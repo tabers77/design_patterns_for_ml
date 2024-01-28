@@ -1,12 +1,15 @@
 from sklearn.ensemble import RandomForestRegressor
 
-from sklearn.metrics import mean_squared_error
+from evaluators import Evaluator
 from data_preprocessor import DataSpliter
 
 import conf.config as cfg
 
 
+# -----------------
 # TEMPLATE PATTERN
+# -----------------
+
 class BaseModel:
 
     def execute_pipeline_steps(self, data, configs):
@@ -14,7 +17,8 @@ class BaseModel:
         x_train, y_train, x_test, y_test = self.split(data, configs)
 
         model = self.train(x_train, y_train)
-        self.evaluate(model, x_test, y_test)
+
+        return self.evaluate(model, x_test, y_test)
 
     def preprocess(self, data):
         raise NotImplementedError
@@ -29,11 +33,13 @@ class BaseModel:
 
     @staticmethod
     def evaluate(model, x_test, y_test):
-        predictions = model.predict(x_test)
-        mse = mean_squared_error(y_test, predictions)
-        print(f"Model mean_squared_error: {mse:.2f}")
+        evaluator = Evaluator()
+        return evaluator.evaluate(model, x_test, y_test)
 
 
+# -----------------
+# INDIVIDUAL MODELS
+# -----------------
 class SVMModel(BaseModel):
     def preprocess(self, data):
         # Implement SVM-specific preprocessing
@@ -46,8 +52,9 @@ class SVMModel(BaseModel):
 
 class RandomForestModel(BaseModel):
     def __init__(self):
-        model_configs = cfg.config_manager.get_config(model_name='RandomForest')
+        model_configs = cfg.config_manager.get_config(model_name='RandomForestRegressor')
         self.model = RandomForestRegressor().set_params(**model_configs)
+        self.model.name = 'RandomForestRegressor'
 
     def preprocess(self, data):
         # Implement Random Forest-specific preprocessing
@@ -56,9 +63,11 @@ class RandomForestModel(BaseModel):
     def train(self, x_train, y_train):
         self.model.fit(x_train, y_train)
         return self.model
-        # Implement Random Forest training
 
 
+# -----------------
+# MODEL FACTORY
+# -----------------
 class ModelFactory:
     @staticmethod
     def create_regressor_model(model_type):
@@ -76,17 +85,62 @@ class ModelFactory:
 # ------------
 # NEXT STEPS :
 # ------------
-# CREATE A BUILDER FOR MLP
-# class RandomForestModelBuilder:
+
+# # BUILDER PATTERN
+# class MlpModelBuilder:
 #     def __init__(self):
 #         self.model = RandomForestModel()
 #
-#     def set_params(self, params):
-#         self.model.set_params(params)
-#         return self
+#     # def set_params(self, params):
+#     #     self.model.set_params(params)
+#     #     return self
 #
-#     def build(self):
-#         return self.model
+#     def build_mlp(self):
+#         """
+#           Info: MLP for baseline model creation. Regulator helps you to increase or decrease n_neurons
+#
+#           Args:
+#               x:
+#               y:
+#               activation_f_type:
+#               optimizer:
+#               regulator:
+#               hl_activation:
+#               evaluation_metric:
+#
+#           Returns:
+#
+#           """
+#         regulator= 20
+#         n_inputs = x.shape[1]
+#         n_outputs = int(y.nunique())
+#
+#         #o_activation, loss = get_mlp_initial_params(activation_f_type=activation_f_type)
+#
+#         n_neurons = int(np.sqrt(n_inputs * n_outputs) * regulator)
+#
+#         print(f'Number of neurons: {n_neurons}-{int(n_neurons / 2.5)}-{int(n_neurons / 5.5)}')
+#
+#         model = Sequential()
+#
+#         model.add(Dense(n_neurons, input_dim=n_inputs, activation=hl_activation))
+#         model.add(Dropout(0.3))
+#
+#         model.add(Dense(int(n_neurons / 2.5), activation=hl_activation))
+#         model.add(Dropout(0.3))
+#
+#         model.add(Dense(int(n_neurons / 5.5), activation=hl_activation))
+#         model.add(Dropout(0.1))
+#
+#         model.add(Dense(n_outputs, activation=o_activation))  # output layer
+#
+#         model.compile(loss=loss, optimizer=optimizer, metrics=[evaluation_metric])
+#
+#         return model
+#
+#     def set_params(self):
+#         pass
+
 
 # USE THIS
 # X, y = make_classification(random_state=0)

@@ -1,8 +1,3 @@
-# from semla.conf.config_constants import ConfigConstants
-# from semla.conf.config_paths import ConfigPaths
-# from semla.conf.config_model import ConfigModel
-# from semla.conf.config_columns import ConfigColumns, ConfigColumnsLowerCase
-# from semla.conf.config_features import ConfigFeatures
 from dataclasses import dataclass
 from dataclasses_json import dataclass_json
 
@@ -39,7 +34,7 @@ class ModelConfig:
 
 # Usage
 config_manager = ModelConfig()
-config_manager.set_config("RandomForest", n_estimators=100, max_depth=None)  # Adjust parameters as needed
+config_manager.set_config("RandomForestRegressor", n_estimators=100, max_depth=None)  # Adjust parameters as needed
 
 
 @dataclass_json
