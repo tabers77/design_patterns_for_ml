@@ -45,10 +45,3 @@ config_manager.set_config("RandomForestRegressor",
 class Cfg:
     global_configs: GlobalConfigs = GlobalConfigs()
     split_configs: SplitConfigs = SplitConfigs()
-
-    # constants: ConfigConstants = ConfigConstants()
-    # paths: ConfigPaths = ConfigPaths()
-    # model: ConfigModel = ConfigModel()
-    # columns: ConfigColumns = ConfigColumns()
-    # columns_lower_case: ConfigColumnsLowerCase = ConfigColumnsLowerCase()
-    # features: ConfigFeatures = ConfigFeatures()
