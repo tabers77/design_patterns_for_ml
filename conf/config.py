@@ -34,7 +34,10 @@ class ModelConfig:
 
 # Usage
 config_manager = ModelConfig()
-config_manager.set_config("RandomForestRegressor", n_estimators=100, max_depth=None)  # Adjust parameters as needed
+config_manager.set_config("RandomForestRegressor",
+                          n_estimators=100,
+                          max_depth=None,
+                          random_state=42)  # Adjust parameters as needed
 
 
 @dataclass_json

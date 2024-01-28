@@ -1,4 +1,10 @@
+import logging
+
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import LinearRegression
+from sklearn.pipeline import Pipeline
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import StandardScaler
 
 from evaluators import Evaluator
 from data_preprocessor import DataSpliter
@@ -12,15 +18,15 @@ import conf.config as cfg
 
 class BaseModel:
 
-    def execute_pipeline_steps(self, data, configs):
-        data = self.preprocess(data)
-        x_train, y_train, x_test, y_test = self.split(data, configs)
+    def execute_pipeline_steps(self, data, split_configs, pipe_steps=None):
+        data = self.preprocess(data, pipe_steps)
+        x_train, y_train, x_test, y_test = self.split(data, split_configs)
 
         model = self.train(x_train, y_train)
 
         return self.evaluate(model, x_test, y_test)
 
-    def preprocess(self, data):
+    def preprocess(self, data, pipe_steps):
         raise NotImplementedError
 
     @staticmethod
@@ -36,33 +42,98 @@ class BaseModel:
         evaluator = Evaluator()
         return evaluator.evaluate(model, x_test, y_test)
 
+    @staticmethod
+    def setup_preprocessing_pipeline(model, pipe_steps):
+        if pipe_steps is None:
+            pipe_steps = []
+
+        default_steps = [(model.name, model)]
+        all_steps = pipe_steps + default_steps
+        return Pipeline(all_steps)
+
 
 # -----------------
 # INDIVIDUAL MODELS
 # -----------------
-class SVMModel(BaseModel):
-    def preprocess(self, data):
-        # Implement SVM-specific preprocessing
-        pass
 
-    def train(self, data, labels):
-        # Implement SVM training
-        pass
+
+class LinearRegressorModel(BaseModel):
+    def __init__(self, preprocess_strategy='pipeline'):
+        self.pipe_model = None
+        self.preprocess_strategy = preprocess_strategy
+        self.model = LinearRegression()
+        self.model.name = 'LinearRegression'
+
+    @staticmethod
+    def custom_preprocess(data):
+        # Implement Random Forest-specific preprocessing
+        # Example: Feature selection, custom transformations, etc.
+        return data
+
+    def preprocess(self, data, pipe_steps):
+        if self.preprocess_strategy == 'pipeline':
+            if self.preprocess_strategy == 'pipeline' and pipe_steps is None:
+                logging.warning(f"Pipeline steps were not defined and preprocess_strategy is set to pipeline")
+
+            self.pipe_model = self.setup_preprocessing_pipeline(model=self.model, pipe_steps=pipe_steps)
+
+            return data
+        elif self.preprocess_strategy == 'custom':
+            return self.custom_preprocess(data)
+        else:
+            raise ValueError(f"Unsupported preprocess strategy: {self.preprocess_strategy}")
+
+    def train(self, x_train, y_train):
+        if self.preprocess_strategy == 'pipeline':
+            self.pipe_model.fit(x_train, y_train)
+            self.pipe_model.name = self.model.name
+            return self.pipe_model
+
+        elif self.preprocess_strategy == 'custom':
+            self.model.fit(x_train, y_train)
+            return self.model
+        else:
+            raise ValueError(f"Unsupported preprocess strategy: {self.preprocess_strategy}")
 
 
 class RandomForestModel(BaseModel):
-    def __init__(self):
+    def __init__(self, preprocess_strategy='pipeline'):
+        self.pipe_model = None
+        self.preprocess_strategy = preprocess_strategy
         model_configs = cfg.config_manager.get_config(model_name='RandomForestRegressor')
         self.model = RandomForestRegressor().set_params(**model_configs)
         self.model.name = 'RandomForestRegressor'
 
-    def preprocess(self, data):
+    @staticmethod
+    def custom_preprocess(data):
         # Implement Random Forest-specific preprocessing
+        # Example: Feature selection, custom transformations, etc.
         return data
 
+    def preprocess(self, data, pipe_steps):
+        if self.preprocess_strategy == 'pipeline':
+            if self.preprocess_strategy == 'pipeline' and pipe_steps is None:
+                logging.warning(f"Pipeline steps were not defined and preprocess_strategy is set to pipeline")
+
+            self.pipe_model = self.setup_preprocessing_pipeline(model=self.model, pipe_steps=pipe_steps)
+
+            return data
+        elif self.preprocess_strategy == 'custom':
+            return self.custom_preprocess(data)
+        else:
+            raise ValueError(f"Unsupported preprocess strategy: {self.preprocess_strategy}")
+
     def train(self, x_train, y_train):
-        self.model.fit(x_train, y_train)
-        return self.model
+        if self.preprocess_strategy == 'pipeline':
+            self.pipe_model.fit(x_train, y_train)
+            self.pipe_model.name = self.model.name
+            return self.pipe_model
+
+        elif self.preprocess_strategy == 'custom':
+            self.model.fit(x_train, y_train)
+            return self.model
+        else:
+            raise ValueError(f"Unsupported preprocess strategy: {self.preprocess_strategy}")
 
 
 # -----------------
@@ -70,17 +141,16 @@ class RandomForestModel(BaseModel):
 # -----------------
 class ModelFactory:
     @staticmethod
-    def create_regressor_model(model_type):
-        if model_type == 'custom_model':
-            pass
+    def create_regressor_model(model_type, preprocess_strategy='pipeline'):
+        if model_type == 'linear_regression':
+            return LinearRegressorModel(preprocess_strategy=preprocess_strategy)
         elif model_type == 'random_forest':
-            return RandomForestModel()
+            return RandomForestModel(preprocess_strategy=preprocess_strategy)
         else:
             raise ValueError(f'Model type {model_type} not recognized.')
 
     def create_mlp_model(self):
         pass
-
 
 # ------------
 # NEXT STEPS :
@@ -140,18 +210,3 @@ class ModelFactory:
 #
 #     def set_params(self):
 #         pass
-
-
-# USE THIS
-# X, y = make_classification(random_state=0)
-# X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0)
-
-# Create and train pipeline
-# pipe = Pipeline([('imputer', SimpleImputer(strategy="median")),
-#                  ('scaler', StandardScaler()),
-#                  ('svc', SVC())])
-# pipe.fit(X_train, y_train)
-
-# Evaluate the pipeline
-# >>> pipe.score(X_test, y_test)
-# 0.88
