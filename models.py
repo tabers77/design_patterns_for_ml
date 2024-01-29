@@ -51,6 +51,11 @@ class BaseModel:
         all_steps = pipe_steps + default_steps
         return Pipeline(all_steps)
 
+    @staticmethod
+    def sanity_checks(data, preprocess_strategy):
+        if data.isnull().any().any() and preprocess_strategy == 'custom':
+            raise ValueError('Data cant contain missing values with custom preprocess_strategy')
+
 
 # -----------------
 # INDIVIDUAL MODELS
@@ -71,6 +76,9 @@ class LinearRegressorModel(BaseModel):
         return data
 
     def preprocess(self, data, pipe_steps):
+        # Sanity checks
+        self.sanity_checks(data, self.preprocess_strategy)
+
         if self.preprocess_strategy == 'pipeline':
             if self.preprocess_strategy == 'pipeline' and pipe_steps is None:
                 logging.warning(f"Pipeline steps were not defined and preprocess_strategy is set to pipeline")
@@ -111,6 +119,9 @@ class RandomForestModel(BaseModel):
         return data
 
     def preprocess(self, data, pipe_steps):
+        # Sanity checks
+        self.sanity_checks(data, self.preprocess_strategy)
+
         if self.preprocess_strategy == 'pipeline':
             if self.preprocess_strategy == 'pipeline' and pipe_steps is None:
                 logging.warning(f"Pipeline steps were not defined and preprocess_strategy is set to pipeline")

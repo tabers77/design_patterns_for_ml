@@ -19,7 +19,7 @@ from sklearn.preprocessing import StandardScaler
 split_configs = cfg.SplitConfigs(target_col_name='target', train_size=0.80)
 
 if __name__ == '__main__':
-    df = dl.DataLoder().load_data()
+    df = dl.DataLoder().load_diabetes_data()
     preprocessed_df = dp.DataPreprocessor(configs=split_configs, df=df).execute_steps()
     model_factory = ModelFactory()
     model = model_factory.create_regressor_model(model_type='random_forest', preprocess_strategy='pipeline')

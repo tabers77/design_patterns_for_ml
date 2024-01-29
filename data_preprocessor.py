@@ -17,15 +17,15 @@ class DataPreprocessor:
                                                       'target'])
 
         # IDEA: if there are missing columns indicate which ones , give a warning
-        # print(self.df.isnull().sum())
-        return self.df
+        print('Missing values check:', self.df.isnull().any().any())
 
     def standardization(self):
         pass
 
     def execute_steps(self):
+        # self.init_checks()
 
-        return self.init_checks()
+        return self.df
 
 
 class DataSpliter:
