@@ -8,18 +8,22 @@ class Evaluator:
     Class for evaluating regression models using specified metrics.
     """
 
-    def __init__(self):
+    def __init__(self, split_configs):
+        self.split_configs = split_configs
         self.regression_metrics: Dict[str, Any] = {'mean_squared_error': metrics.mean_squared_error,
                                                    'mean_absolute_error': metrics.mean_absolute_error,
                                                    'mean_absolute_percentage_error': metrics.mean_absolute_percentage_error,
 
                                                    }
 
-    def evaluate(self, model, x_test, y_test) -> 'RegressionResults':
-        predictions = model.predict(x_test)
+    def evaluate(self, model, splits) -> 'RegressionResults':
+        if self.split_configs.split_policy != 'feature_target':
+            raise ValueError(f"Unsupported split_policy: {self.split_configs.split_policy}")
+
+        predictions = model.predict(splits.x_test)
         container = dict()
         for eval_metric_name, eval_metric in self.regression_metrics.items():
-            container[eval_metric_name] = eval_metric(y_test, predictions)
+            container[eval_metric_name] = eval_metric(splits.y_test, predictions)
 
         results_table = pd.DataFrame(container, index=[0])
         results_table['model_name'] = model.name

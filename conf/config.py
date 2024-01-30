@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from dataclasses_json import dataclass_json
+from conf.constants import Constants
 
 
 class GlobalConfigs:
@@ -10,9 +11,10 @@ class GlobalConfigs:
 
 
 class SplitConfigs:
-    def __init__(self, target_col_name=None, train_size=0.20):
+    def __init__(self, target_col_name=None, train_size=0.20, split_policy='feature_target'):
         self.target_col_name = target_col_name
         self.train_size = train_size
+        self.split_policy = split_policy
 
 
 # Singleton for Model Configuration Management
@@ -45,3 +47,4 @@ config_manager.set_config("RandomForestRegressor",
 class Cfg:
     global_configs: GlobalConfigs = GlobalConfigs()
     split_configs: SplitConfigs = SplitConfigs()
+    constants: Constants = Constants()

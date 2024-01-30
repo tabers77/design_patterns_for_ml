@@ -15,16 +15,16 @@ import conf.config as cfg
 # -----------------
 # TEMPLATE PATTERN
 # -----------------
-
 class BaseModel:
 
     def execute_pipeline_steps(self, data, split_configs, pipe_steps=None):
         data = self.preprocess(data, pipe_steps)
-        x_train, y_train, x_test, y_test = self.split(data, split_configs)
 
-        model = self.train(x_train, y_train)
+        splits = self.split(data, split_configs)
 
-        return self.evaluate(model, x_test, y_test)
+        model = self.train(splits, split_configs)
+
+        return self.evaluate(model, splits, split_configs)
 
     def preprocess(self, data, pipe_steps):
         raise NotImplementedError
@@ -32,15 +32,15 @@ class BaseModel:
     @staticmethod
     def split(data, configs):
         s = DataSpliter(configs, data)
-        return s.train_test_split()
+        return s.execute_split_steps()
 
-    def train(self, x_train, y_train):
+    def train(self, splits, split_configs):
         raise NotImplementedError
 
     @staticmethod
-    def evaluate(model, x_test, y_test):
-        evaluator = Evaluator()
-        return evaluator.evaluate(model, x_test, y_test)
+    def evaluate(model, splits, split_configs):
+        evaluator = Evaluator(split_configs=split_configs)
+        return evaluator.evaluate(model, splits)
 
     @staticmethod
     def setup_preprocessing_pipeline(model, pipe_steps):
@@ -71,7 +71,7 @@ class LinearRegressorModel(BaseModel):
 
     @staticmethod
     def custom_preprocess(data):
-        # Implement Random Forest-specific preprocessing
+        # Implement LinearRegressorModel-specific preprocessing
         # Example: Feature selection, custom transformations, etc.
         return data
 
@@ -91,14 +91,18 @@ class LinearRegressorModel(BaseModel):
         else:
             raise ValueError(f"Unsupported preprocess strategy: {self.preprocess_strategy}")
 
-    def train(self, x_train, y_train):
+    def train(self, splits, split_configs):
+
+        if split_configs.split_policy != 'feature_target':
+            raise ValueError(f"Unsupported split_policy: {split_configs.split_policy}")
+
         if self.preprocess_strategy == 'pipeline':
-            self.pipe_model.fit(x_train, y_train)
+            self.pipe_model.fit(splits.x_train, splits.y_train)
             self.pipe_model.name = self.model.name
             return self.pipe_model
 
         elif self.preprocess_strategy == 'custom':
-            self.model.fit(x_train, y_train)
+            self.model.fit(splits.x_train, splits.y_train)
             return self.model
         else:
             raise ValueError(f"Unsupported preprocess strategy: {self.preprocess_strategy}")
@@ -134,14 +138,17 @@ class RandomForestModel(BaseModel):
         else:
             raise ValueError(f"Unsupported preprocess strategy: {self.preprocess_strategy}")
 
-    def train(self, x_train, y_train):
+    def train(self, splits, split_configs):
+        if split_configs.split_policy != 'feature_target':
+            raise ValueError(f"Unsupported split_policy: {split_configs.split_policy}")
+
         if self.preprocess_strategy == 'pipeline':
-            self.pipe_model.fit(x_train, y_train)
+            self.pipe_model.fit(splits.x_train, splits.y_train)
             self.pipe_model.name = self.model.name
             return self.pipe_model
 
         elif self.preprocess_strategy == 'custom':
-            self.model.fit(x_train, y_train)
+            self.model.fit(splits.x_train, splits.y_train)
             return self.model
         else:
             raise ValueError(f"Unsupported preprocess strategy: {self.preprocess_strategy}")
@@ -162,6 +169,30 @@ class ModelFactory:
 
     def create_mlp_model(self):
         pass
+
+
+# TODO: GENERATE ALL POSSIBLE SCENARIOS FOR MODEL TRAINER
+
+# class Trainer:
+#     def __init__(self):
+#         pass
+#
+#     def fn(self):
+#         if split_configs.split_policy != 'feature_target':
+#             raise ValueError(f"Unsupported split_policy: {split_configs.split_policy}")
+#
+#         if self.preprocess_strategy == 'pipeline':
+#             self.pipe_model.fit(splits.x_train, splits.y_train)
+#             self.pipe_model.name = self.model.name
+#             return self.pipe_model
+#
+#         elif self.preprocess_strategy == 'custom':
+#             self.model.fit(splits.x_train, splits.y_train)
+#             return self.model
+#         else:
+#             raise ValueError(f"Unsupported preprocess strategy: {self.preprocess_strategy}")
+
+
 
 # ------------
 # NEXT STEPS :
