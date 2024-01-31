@@ -1,6 +1,8 @@
+import numpy as np
 import pandas as pd
-import sklearn.metrics as metrics
+import sklearn.metrics as m
 from typing import Dict, Any
+from conf.config import Cfg
 
 
 class Evaluator:
@@ -10,20 +12,26 @@ class Evaluator:
 
     def __init__(self, split_configs):
         self.split_configs = split_configs
-        self.regression_metrics: Dict[str, Any] = {'mean_squared_error': metrics.mean_squared_error,
-                                                   'mean_absolute_error': metrics.mean_absolute_error,
-                                                   'mean_absolute_percentage_error': metrics.mean_absolute_percentage_error,
-
-                                                   }
 
     def evaluate(self, model, splits) -> 'RegressionResults':
-        if self.split_configs.split_policy != 'feature_target':
-            raise ValueError(f"Unsupported split_policy: {self.split_configs.split_policy}")
+
+        if self.split_configs.split_policy == 'x_y_splits_only':
+            container = dict()
+
+            for eval_metric_name, _ in Cfg.scoring_funcs.regression_scoring_funcs_cv.items():
+
+                eval_metric_name_fixed = '_'.join(eval_metric_name.split('_')[1:])
+
+                container[eval_metric_name_fixed] = - round(np.mean(model['test_' + eval_metric_name]), 2)
+
+            results_table = pd.DataFrame(container, index=[0])
+            container['results_table'] = results_table
+            return RegressionResults(container)
 
         predictions = model.predict(splits.x_test)
         container = dict()
-        for eval_metric_name, eval_metric in self.regression_metrics.items():
-            container[eval_metric_name] = eval_metric(splits.y_test, predictions)
+        for eval_metric_name, eval_metric in Cfg.scoring_funcs.regression_scoring_funcs.items():
+            container[eval_metric_name] = round(eval_metric(splits.y_test, predictions), 2)
 
         results_table = pd.DataFrame(container, index=[0])
         results_table['model_name'] = model.name
