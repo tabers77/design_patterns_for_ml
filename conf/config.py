@@ -20,8 +20,10 @@ class SplitConfigs:
 
 
 class TrainerConfigs:
-    def __init__(self, preprocess_strategy='custom'):
+    def __init__(self, preprocess_strategy='custom', custom_scoring: dict = None, input_dim=None):
         self.preprocess_strategy = preprocess_strategy
+        self.custom_scoring = custom_scoring
+        self.input_dim = input_dim
 
 
 # Singleton for Model Configuration Management

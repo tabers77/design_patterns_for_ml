@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-import sklearn.metrics as m
 from typing import Dict, Any
 from conf.config import Cfg
 
@@ -10,16 +9,19 @@ class Evaluator:
     Class for evaluating regression models using specified metrics.
     """
 
-    def __init__(self, split_configs):
+    def __init__(self, split_configs, custom_scoring=None):
         self.split_configs = split_configs
+        self.custom_scoring = custom_scoring
 
     def evaluate(self, model, splits) -> 'RegressionResults':
 
         if self.split_configs.split_policy == 'x_y_splits_only':
             container = dict()
 
-            for eval_metric_name, _ in Cfg.scoring_funcs.regression_scoring_funcs_cv.items():
+            scoring_funcs = self.custom_scoring if self.custom_scoring is not None else \
+                Cfg.scoring_funcs.regression_scoring_funcs_cv
 
+            for eval_metric_name, _ in scoring_funcs.items():
                 eval_metric_name_fixed = '_'.join(eval_metric_name.split('_')[1:])
 
                 container[eval_metric_name_fixed] = - round(np.mean(model['test_' + eval_metric_name]), 2)
@@ -30,7 +32,10 @@ class Evaluator:
 
         predictions = model.predict(splits.x_test)
         container = dict()
-        for eval_metric_name, eval_metric in Cfg.scoring_funcs.regression_scoring_funcs.items():
+
+        scoring_funcs = self.custom_scoring if self.custom_scoring is not None else \
+            Cfg.scoring_funcs.regression_scoring_funcs
+        for eval_metric_name, eval_metric in scoring_funcs.items():
             container[eval_metric_name] = round(eval_metric(splits.y_test, predictions), 2)
 
         results_table = pd.DataFrame(container, index=[0])

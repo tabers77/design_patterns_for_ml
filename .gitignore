@@ -3,6 +3,6 @@ debugger.py
 ../.idea/
 .idea/
 __pycache__/
-
+.pytest_cache
 # Local folders
 /my_env

@@ -1,4 +1,6 @@
 pandas
 scikit-learn
+keras
+tensorflow
 dataclasses_json
 pytest
