@@ -14,16 +14,15 @@ class Evaluator:
         self.custom_scoring = custom_scoring
 
     def evaluate(self, model, splits) -> 'RegressionResults':
+        scoring_funcs = self.custom_scoring if self.custom_scoring is not None else \
+            (Cfg.scoring_funcs.regression_scoring_funcs_cv if self.split_configs.split_policy == 'x_y_splits_only'
+             else Cfg.scoring_funcs.regression_scoring_funcs)
 
         if self.split_configs.split_policy == 'x_y_splits_only':
             container = dict()
 
-            scoring_funcs = self.custom_scoring if self.custom_scoring is not None else \
-                Cfg.scoring_funcs.regression_scoring_funcs_cv
-
             for eval_metric_name, _ in scoring_funcs.items():
                 eval_metric_name_fixed = '_'.join(eval_metric_name.split('_')[1:])
-
                 container[eval_metric_name_fixed] = - round(np.mean(model['test_' + eval_metric_name]), 2)
 
             results_table = pd.DataFrame(container, index=[0])
@@ -33,9 +32,10 @@ class Evaluator:
         predictions = model.predict(splits.x_test)
         container = dict()
 
-        scoring_funcs = self.custom_scoring if self.custom_scoring is not None else \
-            Cfg.scoring_funcs.regression_scoring_funcs
         for eval_metric_name, eval_metric in scoring_funcs.items():
+            if 'neg' in eval_metric_name:
+                eval_metric_name = '_'.join(eval_metric_name.split('_')[1:])
+
             container[eval_metric_name] = round(eval_metric(splits.y_test, predictions), 2)
 
         results_table = pd.DataFrame(container, index=[0])
