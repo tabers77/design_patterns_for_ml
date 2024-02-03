@@ -1,40 +1,38 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json
 from conf.constants import Constants
 import sklearn.metrics as m
 
 
+@dataclass_json
+@dataclass(frozen=True)
 class GlobalConfigs:
-    def __init__(self, local_run: bool = True, sample_size: float = 1, random_state: int = 42):
-        self.local_run = local_run
-        self.sample_size = sample_size
-        self.random_state = random_state
+    local_run: bool = True
+    sample_size: float = 1
+    random_state: int = 42
 
 
+@dataclass_json
+@dataclass(frozen=True)
 class SplitConfigs:
-    def __init__(self, target_col_name=None, train_size=0.20, cv=5, split_policy='feature_target'):
-        self.target_col_name = target_col_name
-        self.train_size = train_size
-        self.cv = cv
-        self.split_policy = split_policy
+    target_col_name: str = None
+    train_size: float = 0.20
+    cv: int = 5
+    split_policy: str = 'feature_target'
 
 
+@dataclass_json
+@dataclass(frozen=True)
 class TrainerConfigs:
-    def __init__(self, preprocess_strategy='custom', custom_scoring: dict = None, input_dim=None):
-        self.preprocess_strategy = preprocess_strategy
-        self.custom_scoring = custom_scoring
-        self.input_dim = input_dim
+    preprocess_strategy: str = 'custom'
+    custom_scoring: dict = None
+    input_dim: int = None
 
 
-# Singleton for Model Configuration Management
+@dataclass_json
+@dataclass(frozen=True)
 class ModelConfig:
-    _instance = None
-    _config = {}
-
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(ModelConfig, cls).__new__(cls)
-        return cls._instance
+    _config: dict = field(default_factory=dict)
 
     def set_config(self, model_name, **kwargs):
         self._config[model_name] = kwargs
@@ -64,6 +62,5 @@ class ScoringFuncs:
 @dataclass_json
 @dataclass(frozen=True)
 class Cfg:
-    global_configs: GlobalConfigs = GlobalConfigs()
     constants: Constants = Constants()
     scoring_funcs: ScoringFuncs = ScoringFuncs()
