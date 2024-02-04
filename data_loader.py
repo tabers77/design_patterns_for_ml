@@ -1,11 +1,21 @@
 import pandas as pd
 import numpy as np
 from sklearn.datasets import load_diabetes
+from typing import Optional
 
 
 class DataLoder:
     @staticmethod
-    def load_diabetes_data(with_missing_values=False):
+    def load_diabetes_data(with_missing_values: Optional[bool] = False) -> pd.DataFrame:
+        """
+         Load the Diabetes dataset.
+
+         Parameters:
+         - with_missing_values (bool): If True, introduce missing values to the features.
+
+         Returns:
+         pd.DataFrame: DataFrame containing the feature and target variables.
+         """
         # Load Boston Housing dataset
         diabetes_df = load_diabetes()
         # Create a DataFrame with the feature and target variables

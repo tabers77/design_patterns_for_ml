@@ -1,7 +1,8 @@
 import numpy as np
 import pandas as pd
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from conf.config import Cfg
+from conf.config import SplitConfigs
 
 
 class Evaluator:
@@ -9,11 +10,21 @@ class Evaluator:
     Class for evaluating regression models using specified metrics.
     """
 
-    def __init__(self, split_configs, custom_scoring=None):
+    def __init__(self, split_configs: SplitConfigs, custom_scoring: Optional[Dict[str, Any]] = None):
         self.split_configs = split_configs
         self.custom_scoring = custom_scoring
 
-    def evaluate(self, model, splits) -> 'RegressionResults':
+    def evaluate(self, model: Any, splits: Any) -> 'RegressionResults':
+        """
+        Evaluate the regression model using specified metrics.
+
+        Parameters:
+        - model: The regression model to be evaluated.
+        - splits: Data splits for evaluation.
+
+        Returns:
+        - RegressionResults: Object containing evaluation results.
+        """
         scoring_funcs = self.custom_scoring if self.custom_scoring is not None else \
             (Cfg.scoring_funcs.regression_scoring_funcs_cv if self.split_configs.split_policy == 'x_y_splits_only'
              else Cfg.scoring_funcs.regression_scoring_funcs)

@@ -1,10 +1,15 @@
 from sklearn.model_selection import cross_validate
-
 from conf import config as cfg
+from typing import Any, Optional, Union, Dict
 
 
 class Trainer:
-    def __init__(self, splits, split_configs, trainer_configs, model=None, pipe_model=None):
+    """
+    Trainer class for handling training and cross-validation of models.
+    """
+
+    def __init__(self, splits: Any, split_configs: Any, trainer_configs: Any, model: Optional[Any] = None,
+                 pipe_model: Optional[Any] = None) -> None:
         self.splits = splits
         self.split_configs = split_configs
         self.trainer_configs = trainer_configs
@@ -12,7 +17,13 @@ class Trainer:
         self.pipe_model = pipe_model
         self.custom_scoring = self.trainer_configs.custom_scoring
 
-    def base_train(self):
+    def base_train(self) -> Union[Any, Dict[str, Any]]:
+        """
+        Perform base training without neural network.
+
+        Returns:
+        - Union[Any, Dict[str, Any]]: Trained model or cross-validation results.
+        """
 
         if self.split_configs.split_policy == 'feature_target':
             if self.trainer_configs.preprocess_strategy == 'pipeline':
@@ -55,9 +66,13 @@ class Trainer:
         else:
             raise ValueError(f"Unsupported preprocess strategy: {self.trainer_configs.preprocess_strategy}")
 
-    def nn_train(self):
+    def nn_train(self) -> Union[Any, Dict[str, Any]]:
+        """
+        Perform training for neural networks.
 
-        """Trainer for neural networks"""
+        Returns:
+        - Union[Any, Dict[str, Any]]: Trained model or cross-validation results.
+        """
 
         if self.split_configs.split_policy == 'feature_target':
             if self.trainer_configs.preprocess_strategy == 'pipeline':

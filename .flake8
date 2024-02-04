@@ -1,0 +1,4 @@
+[flake8]
+exclude = .git,__pycache__,my_env,.pytest_cache, __pycache__/, .idea/, ../.idea/, debugger.py
+max-line-length = 300
+extend-ignore = E203, W503

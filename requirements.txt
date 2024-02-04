@@ -4,3 +4,4 @@ keras
 tensorflow
 dataclasses_json
 pytest
+flake8
