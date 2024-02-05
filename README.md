@@ -89,8 +89,6 @@ design_patterns_for_ml
 │   README.md
 │   .flake8
 │   .gitignore
-│   config.py
-│   constants.py
 │   data_loader.py
 │   data_preprocessor.py
 │   decorators.py
@@ -104,5 +102,7 @@ design_patterns_for_ml
 │
 └───conf
     │   config.py
+    │   constants.py
+    
 ```
 
