@@ -84,19 +84,25 @@ For more information on usage, refer to main.py
 ## Project Structure
 
 design_patterns_for_ml
-|-- conf
-|-- .flake8
-|-- .gitignore
-|-- data_loader.py
-|-- data_preprocessor.py
-|-- decorators.py
-|-- evaluators.py
-|-- main.py
-|-- model_builders.py
-|-- models.py
-|-- README.md
-|-- requirements.txt
-|-- tests.py
-|-- trainer.py
-
+```
+design_patterns_for_ml
+│   README.md
+│   .flake8
+│   .gitignore
+│   config.py
+│   constants.py
+│   data_loader.py
+│   data_preprocessor.py
+│   decorators.py
+│   evaluators.py
+│   main.py
+│   model_builders.py
+│   models.py
+│   requirements.txt
+│   tests.py
+│   trainer.py
+│
+└───conf
+    │   config.py
+```
 
