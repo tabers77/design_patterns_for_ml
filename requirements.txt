@@ -5,3 +5,6 @@ tensorflow
 dataclasses_json
 pytest
 flake8
+matplotlib
+seaborn
+sweetviz
