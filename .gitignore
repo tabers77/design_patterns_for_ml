@@ -4,5 +4,7 @@ debugger.py
 .idea/
 __pycache__/
 .pytest_cache
+Target_Analysis.html
+Train_Test_Comparison.html
 # Local folders
 /my_env
