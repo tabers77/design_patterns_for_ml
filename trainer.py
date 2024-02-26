@@ -64,7 +64,7 @@ class Trainer:
                 return cv_results
 
         else:
-            raise ValueError(f"Unsupported preprocess strategy: {self.trainer_configs.preprocess_strategy}")
+            raise ValueError(f"Unsupported preprocess strategy: {self.split_configs.split_policy}")
 
     def nn_train(self) -> Union[Any, Dict[str, Any]]:
         """

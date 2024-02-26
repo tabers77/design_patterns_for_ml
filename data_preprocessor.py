@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 from scipy.stats import norm
 from conf.config import Cfg
+import conf.config as conf
 from typing import Dict, Any, Tuple, List
 
 logging.basicConfig(level=logging.INFO)
@@ -153,19 +154,19 @@ class DataPreprocessor:
 
 
 class DataSpliter:
-    def __init__(self, configs: Any, df: pd.DataFrame):
+    def __init__(self, configs: conf.SplitConfigs, df: pd.DataFrame):
         """
         Initialize the DataSplitter with configuration and a DataFrame.
 
         Parameters:
-        - configs (Any): The configuration object.
+        - configs (SplitConfigs): The configuration object.
         - df (pd.DataFrame): The input DataFrame.
         """
-        self.configs = configs
-        self.df = df
-        self.target_col_name = self.configs.target_col_name
-        self.train_size = self.configs.train_size
-        self.train_chunk = int(len(self.df) * self.train_size)
+        self.configs: conf.SplitConfigs = configs
+        self.df: pd.DataFrame = df
+        self.target_col_name: str = self.configs.target_col_name
+        self.train_size: float = self.configs.train_size
+        self.train_chunk: int = int(len(self.df) * self.train_size)
 
     # TODO: add different types of stratification
     def feature_target_split(self) -> Dict[str, pd.DataFrame]:
@@ -242,3 +243,5 @@ class SplitResults:
         """
         for split_name, split_value in splits.items():
             setattr(self, split_name, split_value)
+
+

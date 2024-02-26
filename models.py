@@ -5,9 +5,9 @@ import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import Pipeline
+from data_preprocessor import DataSpliter
 
 from evaluators import Evaluator
-from data_preprocessor import DataSpliter
 
 import conf.config as cfg
 
@@ -25,7 +25,8 @@ class BaseModel:
     Base class for machine learning models using a template pattern.
     """
 
-    def execute_pipeline_steps(self, data: pd.DataFrame, split_configs: cfg.SplitConfigs,
+    def execute_pipeline_steps(self, data: pd.DataFrame,
+                               split_configs: cfg.SplitConfigs,
                                trainer_configs: cfg.TrainerConfigs,
                                pipe_steps: Optional[List[Any]] = None) -> Any:
         """
@@ -33,7 +34,7 @@ class BaseModel:
 
         Parameters:
         - data: Input data for the model.
-        - split_configs: Configuration for data splitting.
+        - data_spliter: Object responsible for splitting data.
         - trainer_configs: Configuration for the trainer.
         - pipe_steps: Optional list of pipeline steps.
 
@@ -68,6 +69,9 @@ class BaseModel:
         """
         s = DataSpliter(configs, data)
         return s.execute_split_steps()
+
+    def train(self, splits: Any, split_configs: Any, trainer_configs: Any) -> Any:
+        raise NotImplementedError
 
     def train(self, splits: Any, split_configs: Any, trainer_configs: Any) -> Any:
         raise NotImplementedError

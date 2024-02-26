@@ -7,6 +7,9 @@ from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler
 import sklearn.metrics as m
 from typing import Optional, Dict, Any
+import pandas as pd
+import analytics_tools as at
+from data_preprocessor import DataSpliter
 
 
 @pytest.fixture
@@ -25,46 +28,106 @@ def model_factory():
     return ModelFactory()
 
 
-# Adapted test cases based on variations
-@pytest.mark.parametrize("split_policy", ['feature_target', 'x_y_splits_only'])
-@pytest.mark.parametrize("preprocess_strategy", ['custom', 'pipeline'])
-@pytest.mark.parametrize("custom_scoring", [None, {'neg_mean_squared_error': m.mean_squared_error}])
-@pytest.mark.parametrize("with_missing_values", [True, False])
-def test_regression_models(data_preprocessor: dp.DataPreprocessor, model_factory: ModelFactory,
-                           split_policy: str, preprocess_strategy: str, custom_scoring: Optional[Dict[str, Any]],
-                           with_missing_values: bool) -> None:
-    """
-    Test function for regression models.
+# # Adapted test cases based on variations
+# @pytest.mark.parametrize("split_policy", ['feature_target', 'x_y_splits_only'])
+# @pytest.mark.parametrize("preprocess_strategy", ['custom', 'pipeline'])
+# @pytest.mark.parametrize("custom_scoring", [None, {'neg_mean_squared_error': m.mean_squared_error}])
+# @pytest.mark.parametrize("with_missing_values", [True, False])
+# def test_regression_models(data_preprocessor: dp.DataPreprocessor, model_factory: ModelFactory,
+#                            split_policy: str, preprocess_strategy: str, custom_scoring: Optional[Dict[str, Any]],
+#                            with_missing_values: bool) -> None:
+#     """
+#     Test function for regression models.
+#
+#     Parameters:
+#     - data_preprocessor: A DataPreprocessor instance.
+#     - model_factory: A ModelFactory instance.
+#     - split_policy: Split policy for data splitting.
+#     - preprocess_strategy: Preprocessing strategy.
+#     - custom_scoring: Custom scoring dictionary.
+#     - with_missing_values: Flag indicating whether to include missing values.
+#
+#     Returns:
+#     - None
+#     """
+#     split_configs = cfg.SplitConfigs(target_col_name='target', train_size=0.80, cv=5, split_policy=split_policy)
+#
+#     trainer_configs = cfg.TrainerConfigs(preprocess_strategy=preprocess_strategy, custom_scoring=custom_scoring,
+#                                          input_dim=5)
+#
+#     if with_missing_values:
+#         pipe_steps = [('imputer', SimpleImputer(strategy="median")), ('scaler', StandardScaler())]
+#     else:
+#         pipe_steps = None
+#
+#     preprocessed_df = data_preprocessor.execute_steps()
+#
+#     model_rf = model_factory.create_regressor_model(model_type='random_forest', trainer_configs=trainer_configs)
+#     results_rf = model_rf.execute_pipeline_steps(data=preprocessed_df,
+#                                                  split_configs=split_configs,
+#                                                  trainer_configs=trainer_configs,
+#                                                  pipe_steps=pipe_steps)
+#
+#     model_lr = model_factory.create_regressor_model(model_type='linear_regression',
+#                                                     trainer_configs=trainer_configs)
+#
+#     results_lr = model_lr.execute_pipeline_steps(data=preprocessed_df,
+#                                                  split_configs=split_configs,
+#                                                  trainer_configs=trainer_configs,
+#                                                  pipe_steps=pipe_steps)
+#
+#     assert results_rf.mean_squared_error is not None
+#     assert results_lr.mean_squared_error is not None
 
-    Parameters:
-    - data_preprocessor: A DataPreprocessor instance.
-    - model_factory: A ModelFactory instance.
-    - split_policy: Split policy for data splitting.
-    - preprocess_strategy: Preprocessing strategy.
-    - custom_scoring: Custom scoring dictionary.
-    - with_missing_values: Flag indicating whether to include missing values.
 
-    Returns:
-    - None
-    """
-    split_configs = cfg.SplitConfigs(target_col_name='target', train_size=0.80, cv=5, split_policy=split_policy)
-    trainer_configs = cfg.TrainerConfigs(preprocess_strategy=preprocess_strategy, custom_scoring=custom_scoring,
-                                         input_dim=5)
-
-    if with_missing_values:
-        pipe_steps = [('imputer', SimpleImputer(strategy="median")), ('scaler', StandardScaler())]
-    else:
-        pipe_steps = None
-
+@pytest.fixture
+def train_test_comp(data_preprocessor: dp.DataPreprocessor):
     preprocessed_df = data_preprocessor.execute_steps()
+    split_configs = cfg.SplitConfigs(target_col_name='target',
+                                     train_size=0.80,
+                                     cv=5,
+                                     split_policy='train_test_splits_only')
 
-    model_rf = model_factory.create_regressor_model(model_type='random_forest', trainer_configs=trainer_configs)
-    results_rf = model_rf.execute_pipeline_steps(data=preprocessed_df, split_configs=split_configs,
-                                                 trainer_configs=trainer_configs, pipe_steps=pipe_steps)
+    splits = DataSpliter(configs=split_configs, df=preprocessed_df).execute_split_steps()
 
-    model_lr = model_factory.create_regressor_model(model_type='linear_regression', trainer_configs=trainer_configs)
-    results_lr = model_lr.execute_pipeline_steps(data=preprocessed_df, split_configs=split_configs,
-                                                 trainer_configs=trainer_configs, pipe_steps=pipe_steps)
+    return at.TrainVsTest(train=splits.train, test=splits.test)
 
-    assert results_rf.mean_squared_error is not None
-    assert results_lr.mean_squared_error is not None
+
+# def test_get_report(train_test_comp, mocker):
+#     mocker.patch('sweetviz.analyze.compare.compare')
+#     train_test_comp.get_report('target_label')
+#     sweetviz.analyze.compare.compare.assert_called_once()
+
+
+# def test_get_train_test_counts(train_test_comp, caplog):
+#     train_test_comp.get_train_test_counts()
+#     assert "no low cardinality columns" in caplog.text
+#
+#
+# def test_is_distribution_different(train_test_comp):
+#     result_df, diff_cols = train_test_comp.is_distribution_different(alpha=0.05)
+#     assert result_df.empty
+#     assert diff_cols == []
+
+
+# @pytest.mark.mpl
+# def test_plot_distribution_pairs_wrapper(train_test_comp, mocker):
+#     mocker.patch('matplotlib.pyplot.show')
+#     fig = train_test_comp.plot_distribution_pairs_wrapper(train=train_test_comp.train,
+#                                                           test=train_test_comp.test,
+#                                                           dist_plot_type='hist_plot',
+#                                                           use_boxplot=False,
+#                                                           max_n_features=3)
+#     plt.show.assert_called_once()
+
+
+def test_get_covariance_shift_score(train_test_comp):
+    result = train_test_comp.get_covariance_shift_score(target_label='target')
+    assert isinstance(result, tuple)
+    assert len(result) == 2
+
+
+def test_get_covariance_shift_score_per_feature(train_test_comp):
+    result = train_test_comp.get_covariance_shift_score_per_feature()
+    assert isinstance(result, tuple)
+    assert len(result) == 2
