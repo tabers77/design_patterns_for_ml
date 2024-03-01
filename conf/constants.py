@@ -10,5 +10,5 @@ class Constants:
                      'target']
 
 
-color_list = ["#A5D7E8", "#576CBC"] # "#19376D", "#0B2447"
+color_list = ["#A5D7E8", "#576CBC"]  # "#19376D", "#0B2447"
 cmap_custom = ListedColormap(color_list)

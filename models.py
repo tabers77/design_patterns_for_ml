@@ -15,11 +15,120 @@ from model_builders import MlpModelBuilder
 from trainer import Trainer
 
 from keras.models import Sequential
+import utils as ut
 
 
-# -----------------
-# TEMPLATE PATTERN
-# -----------------
+class EvaluateEstimators:
+    """
+    Class for evaluating different regression estimators.
+
+    Attributes:
+        df (pd.DataFrame): The DataFrame containing the dataset.
+        split_configs (Any): The configuration for data splitting.
+        trainer_configs (Any): The configuration for model training.
+        regression (bool): Flag indicating whether regression is being performed (default is True).
+        custom_estimators (Any): Custom regression estimators to evaluate (default is None).
+    """
+
+    def __init__(self, df, split_configs, trainer_configs, regression=True, custom_estimators=None):
+        self.df = df
+        self.split_configs = split_configs
+        self.trainer_configs = trainer_configs
+        self.regression = regression
+        self.custom_estimators = custom_estimators
+
+    def create_model_pipes(self, regressor_name: str) -> Any:
+        """
+        Create model pipelines for the given regressor.
+
+        Parameters:
+            regressor_name (str): The name of the regressor.
+
+        Returns:
+            Any: Results of executing the model pipeline steps.
+        """
+        model_factory = ModelFactory()
+        model_pipe = model_factory.create_regressor_model(model_type=regressor_name,
+                                                          trainer_configs=self.trainer_configs)
+
+        results = model_pipe.execute_pipeline_steps(data=self.df,
+                                                    split_configs=self.split_configs,
+                                                    trainer_configs=self.trainer_configs)
+
+        return results
+
+    def execute_steps(self) -> ut.DictResultHolder:
+        """
+        Execute the steps for evaluating regression models.
+
+        Returns:
+            ut.DictResultHolder: Object containing evaluation results.
+        """
+
+        results_container = dict()
+        if self.custom_estimators is None:
+            default_regressors = ['random_forest', 'linear_regression']  # TODO: ADD TO CONSTANTS
+            # Loop 1
+            for default_regressor_name in default_regressors:
+                # result = self.wrapper(regressor_name)
+                result = self.create_model_pipes(default_regressor_name)
+                results_container[default_regressor_name] = result
+        else:
+            # Loop 2
+            for custom_estimator_pipe in self.custom_estimators:
+                regressor_name = custom_estimator_pipe.model.name
+                result = custom_estimator_pipe.execute_pipeline_steps(data=self.df,
+                                                                      split_configs=self.split_configs,
+                                                                      trainer_configs=self.trainer_configs)
+                results_container[regressor_name] = result
+
+        if self.trainer_configs.scorer.custom_scoring is not None:
+
+            tables = [val.results_table for val in results_container.values()]
+            concatenated_tables = pd.concat(tables)
+
+            metrics_container = [vars(result) for result in results_container.values()]
+            metrics = min([d[k] for d in metrics_container for k, v in d.items() if k != 'results_table'])
+
+            best_model_names = [name for name, results in results_container.items() if
+                                results.mean_squared_error == metrics]
+
+        else:
+            tables = [val.results_table for val in results_container.values()]
+            concatenated_tables = pd.concat(tables)
+
+            metrics = min([val.mean_squared_error for val in results_container.values()])
+
+            best_model_names = [name for name, results in results_container.items() if
+                                results.mean_squared_error == metrics]
+
+        return self._compile_results(concatenated_tables, best_model_names)
+
+    @staticmethod
+    def _compile_results(concatenated_tables: pd.DataFrame, best_model_names: list) -> ut.DictResultHolder:
+        """
+        Compile the evaluation results.
+
+        Parameters:
+            concatenated_tables (pd.DataFrame): Concatenated evaluation tables.
+            best_model_names (list): List of best model names.
+
+        Returns:
+            ut.DictResultHolder: Object containing compiled evaluation results.
+        """
+        result_container = dict()
+        result_container['concatenated_tables'] = concatenated_tables
+        result_container['best_model_names'] = best_model_names
+
+        return ut.DictResultHolder(result_container)
+
+
+# -------------------------------------------
+
+# ------------ TEMPLATE PATTERN ------------
+
+# -------------------------------------------
+
 class BaseModel:
     """
     Base class for machine learning models using a template pattern.
@@ -50,7 +159,9 @@ class BaseModel:
         return self.evaluate(model=output,
                              splits=splits,
                              split_configs=split_configs,
-                             custom_scoring=trainer_configs.custom_scoring)
+                             trainer_configs=trainer_configs
+                             # custom_scoring=trainer_configs.custom_scoring # TODO: REMOVE
+                             )
 
     def preprocess(self, data: Any, pipe_steps: Optional[List[Any]] = None) -> Any:
         raise NotImplementedError
@@ -73,11 +184,8 @@ class BaseModel:
     def train(self, splits: Any, split_configs: Any, trainer_configs: Any) -> Any:
         raise NotImplementedError
 
-    def train(self, splits: Any, split_configs: Any, trainer_configs: Any) -> Any:
-        raise NotImplementedError
-
     @staticmethod
-    def evaluate(model: Any, splits: Any, split_configs: Any, custom_scoring: Any) -> Any:
+    def evaluate(model: Any, splits: Any, split_configs: Any, trainer_configs) -> Any:
         """
         Evaluate the model.
 
@@ -90,7 +198,8 @@ class BaseModel:
         Returns:
         - Any: Model evaluation output.
         """
-        evaluator = Evaluator(split_configs=split_configs, custom_scoring=custom_scoring)
+
+        evaluator = Evaluator(split_configs=split_configs, trainer_configs=trainer_configs)
         return evaluator.evaluate(model, splits)
 
     @staticmethod

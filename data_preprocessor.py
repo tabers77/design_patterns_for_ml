@@ -243,5 +243,3 @@ class SplitResults:
         """
         for split_name, split_value in splits.items():
             setattr(self, split_name, split_value)
-
-

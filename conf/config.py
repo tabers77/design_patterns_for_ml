@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json
 from conf.constants import Constants
 import sklearn.metrics as m
+from typing import Any
 
 
 @dataclass_json
@@ -25,7 +26,7 @@ class SplitConfigs:
 @dataclass(frozen=True)
 class TrainerConfigs:
     preprocess_strategy: str = 'custom'
-    custom_scoring: dict = None
+    scorer: Any = None
     input_dim: int = None
 
 

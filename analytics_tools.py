@@ -222,7 +222,7 @@ class TrainVsTest:
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=FutureWarning)
-            g = sns.boxplot(x=hue, y=feature, data=data_df, palette=palette, ax=ax)
+            # g = sns.boxplot(x=hue, y=feature, data=data_df, palette=palette, ax=ax)
 
         # Set labels for the legend
         # We should set the legend once, not for each unique value of hue
@@ -300,7 +300,8 @@ class TrainVsTest:
             n_folds (int): Number of folds for cross-validation.
 
         - https://www.analyticsvidhya.com/blog/2017/07/covariate-shift-the-hidden-problem-of-real-world-data-science/
-        Note: if the value of AUC-ROC for a particular feature is greater than 0.80, we classify that feature as drifting.
+        Note: if the value of AUC-ROC for a particular feature is greater than 0.80, we classify that feature as
+        drifting.
 
         Returns:
             Tuple containing mean and standard deviation of covariance shift scores.

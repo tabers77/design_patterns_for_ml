@@ -15,7 +15,7 @@ class Trainer:
         self.trainer_configs = trainer_configs
         self.model = model
         self.pipe_model = pipe_model
-        self.custom_scoring = self.trainer_configs.custom_scoring
+        # self.custom_scoring = self.trainer_configs.custom_scoring
 
     def base_train(self) -> Union[Any, Dict[str, Any]]:
         """
@@ -36,10 +36,8 @@ class Trainer:
                 return self.model
 
         elif self.split_configs.split_policy == 'x_y_splits_only':
-
-            # Observe that model evaluation is already performed here:
-            scoring_metrics = list(self.custom_scoring.keys()) if self.custom_scoring is not None else \
-                list(cfg.Cfg.scoring_funcs.regression_scoring_funcs_cv.keys())
+            # Observe that cross_validate requires a list
+            scoring_metrics = list(self.trainer_configs.scorer.get_scoring_funcs().keys())
 
             if self.trainer_configs.preprocess_strategy == 'pipeline':
 
@@ -50,9 +48,12 @@ class Trainer:
                 except Exception as e:
                     raise ValueError(
                         f'If using pipeline & cross validation check that you use the correct scoring parameters, '
-                        f'you are using:{self.custom_scoring} . Error {e}')
+                        f'you are using:{self.trainer_configs.scorer.custom_scoring} . Error {e}')
 
                 self.pipe_model.name = self.model.name
+
+                cv_results['name'] = self.model.name
+
                 return cv_results
 
             elif self.trainer_configs.preprocess_strategy == 'custom':
@@ -92,7 +93,8 @@ class Trainer:
         elif self.split_configs.split_policy == 'x_y_splits_only':
 
             # Observe that model evaluation is already performed here:
-            scoring_metrics = list(self.custom_scoring.keys()) if self.custom_scoring is not None else \
+            scoring_metrics = list(self.trainer_configs.scorer.custom_scoring.keys()) if \
+                self.trainer_configs.scorer.custom_scoring is not None else \
                 list(cfg.Cfg.scoring_funcs.regression_scoring_funcs_cv.keys())
 
             if self.trainer_configs.preprocess_strategy == 'pipeline':
@@ -104,7 +106,7 @@ class Trainer:
                 except Exception as e:
                     raise ValueError(
                         f'If using pipeline & cross validation check that you use the correct scoring parameters, '
-                        f'you are using:{self.custom_scoring} . Error {e}')
+                        f'you are using:{self.trainer_configs.scorer.custom_scoring} . Error {e}')
 
                 self.pipe_model.name = self.model.name
                 return cv_results
