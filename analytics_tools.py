@@ -7,7 +7,7 @@ import warnings
 
 from numpy import ndarray
 
-from conf.constants import color_list
+from conf.config import Cfg
 import sweetviz as sv
 from scipy.stats import ttest_ind
 import sklearn.model_selection as ms
@@ -271,9 +271,14 @@ class TrainVsTest:
         # Iterate through each feature and plot its distribution in a separate subplot
         for i, feature in enumerate(numeric_features):
             if use_boxplot:
-                self.plot_distribution_pairs_boxplot(train, test, feature, palette=color_list, ax=axes[i])
+
+                self.plot_distribution_pairs_boxplot(train, test, feature, palette=Cfg.constants.color_list, ax=axes[i])
             else:
-                self.plot_distribution_pairs(train, test, feature, dist_plot_type=dist_plot_type, palette=color_list,
+                self.plot_distribution_pairs(train,
+                                             test,
+                                             feature,
+                                             dist_plot_type=dist_plot_type,
+                                             palette=Cfg.constants.color_list,
                                              ax=axes[i])
 
         # Hide empty subplots

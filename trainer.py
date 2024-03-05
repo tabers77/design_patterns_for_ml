@@ -8,10 +8,10 @@ class Trainer:
     Trainer class for handling training and cross-validation of models.
     """
 
-    def __init__(self, splits: Any, split_configs: Any, trainer_configs: Any, model: Optional[Any] = None,
+    def __init__(self, splits: Any,  trainer_configs: Any, model: Optional[Any] = None,
                  pipe_model: Optional[Any] = None) -> None:
         self.splits = splits
-        self.split_configs = split_configs
+        self.split_configs = trainer_configs.scorer.split_configs
         self.trainer_configs = trainer_configs
         self.model = model
         self.pipe_model = pipe_model
@@ -32,6 +32,7 @@ class Trainer:
                 return self.pipe_model
 
             elif self.trainer_configs.preprocess_strategy == 'custom':
+
                 self.model.fit(self.splits.x_train, self.splits.y_train)
                 return self.model
 
@@ -61,6 +62,8 @@ class Trainer:
                 # Perform cross-validation
                 cv_results = cross_validate(self.model, self.splits.x, self.splits.y, cv=self.split_configs.cv,
                                             scoring=scoring_metrics)
+
+                cv_results['name'] = self.model.name
 
                 return cv_results
 
@@ -108,6 +111,8 @@ class Trainer:
                         f'If using pipeline & cross validation check that you use the correct scoring parameters, '
                         f'you are using:{self.trainer_configs.scorer.custom_scoring} . Error {e}')
 
+                # TODO: IMPLEMENT: cv_results['name'] = self.model.name
+
                 self.pipe_model.name = self.model.name
                 return cv_results
 
@@ -116,6 +121,7 @@ class Trainer:
                 # Perform cross-validation
                 cv_results = cross_validate(self.model, self.splits.x, self.splits.y, cv=self.split_configs.cv,
                                             scoring=scoring_metrics)
+                # TODO: IMPLEMENT: cv_results['name'] = self.model.name
 
                 return cv_results
 

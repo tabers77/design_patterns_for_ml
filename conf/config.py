@@ -16,7 +16,7 @@ class GlobalConfigs:
 @dataclass_json
 @dataclass(frozen=True)
 class SplitConfigs:
-    target_col_name: str = None
+    target_col_names: str = None
     train_size: float = 0.20
     cv: int = 5
     split_policy: str = 'feature_target'

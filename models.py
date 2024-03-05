@@ -24,15 +24,13 @@ class EvaluateEstimators:
 
     Attributes:
         df (pd.DataFrame): The DataFrame containing the dataset.
-        split_configs (Any): The configuration for data splitting.
         trainer_configs (Any): The configuration for model training.
         regression (bool): Flag indicating whether regression is being performed (default is True).
         custom_estimators (Any): Custom regression estimators to evaluate (default is None).
     """
 
-    def __init__(self, df, split_configs, trainer_configs, regression=True, custom_estimators=None):
+    def __init__(self, df, trainer_configs, regression=True, custom_estimators=None):
         self.df = df
-        self.split_configs = split_configs
         self.trainer_configs = trainer_configs
         self.regression = regression
         self.custom_estimators = custom_estimators
@@ -52,7 +50,6 @@ class EvaluateEstimators:
                                                           trainer_configs=self.trainer_configs)
 
         results = model_pipe.execute_pipeline_steps(data=self.df,
-                                                    split_configs=self.split_configs,
                                                     trainer_configs=self.trainer_configs)
 
         return results
@@ -67,7 +64,7 @@ class EvaluateEstimators:
 
         results_container = dict()
         if self.custom_estimators is None:
-            default_regressors = ['random_forest', 'linear_regression']  # TODO: ADD TO CONSTANTS
+            default_regressors = cfg.Cfg.constants.default_regressors
             # Loop 1
             for default_regressor_name in default_regressors:
                 # result = self.wrapper(regressor_name)
@@ -78,7 +75,6 @@ class EvaluateEstimators:
             for custom_estimator_pipe in self.custom_estimators:
                 regressor_name = custom_estimator_pipe.model.name
                 result = custom_estimator_pipe.execute_pipeline_steps(data=self.df,
-                                                                      split_configs=self.split_configs,
                                                                       trainer_configs=self.trainer_configs)
                 results_container[regressor_name] = result
 
@@ -135,7 +131,6 @@ class BaseModel:
     """
 
     def execute_pipeline_steps(self, data: pd.DataFrame,
-                               split_configs: cfg.SplitConfigs,
                                trainer_configs: cfg.TrainerConfigs,
                                pipe_steps: Optional[List[Any]] = None) -> Any:
         """
@@ -152,15 +147,13 @@ class BaseModel:
         """
         data = self.preprocess(data, pipe_steps)
 
-        splits = self.split(data, split_configs)
+        splits = self.split(data, trainer_configs.scorer.split_configs)
 
-        output = self.train(splits, split_configs, trainer_configs)
+        output = self.train(splits, trainer_configs)
 
         return self.evaluate(model=output,
                              splits=splits,
-                             split_configs=split_configs,
                              trainer_configs=trainer_configs
-                             # custom_scoring=trainer_configs.custom_scoring # TODO: REMOVE
                              )
 
     def preprocess(self, data: Any, pipe_steps: Optional[List[Any]] = None) -> Any:
@@ -181,11 +174,11 @@ class BaseModel:
         s = DataSpliter(configs, data)
         return s.execute_split_steps()
 
-    def train(self, splits: Any, split_configs: Any, trainer_configs: Any) -> Any:
+    def train(self, splits: Any, trainer_configs: Any) -> Any:
         raise NotImplementedError
 
     @staticmethod
-    def evaluate(model: Any, splits: Any, split_configs: Any, trainer_configs) -> Any:
+    def evaluate(model: Any, splits: Any, trainer_configs) -> Any:
         """
         Evaluate the model.
 
@@ -199,7 +192,7 @@ class BaseModel:
         - Any: Model evaluation output.
         """
 
-        evaluator = Evaluator(split_configs=split_configs, trainer_configs=trainer_configs)
+        evaluator = Evaluator(trainer_configs=trainer_configs)
         return evaluator.evaluate(model, splits)
 
     @staticmethod
@@ -293,7 +286,7 @@ class LinearRegressorModel(BaseModel):
         else:
             raise ValueError(f"Unsupported preprocess strategy: {self.preprocess_strategy}")
 
-    def train(self, splits: Any, split_configs: Any, trainer_configs: Any) -> Any:
+    def train(self, splits: Any, trainer_configs: Any) -> Any:
         """
         Train the Linear Regression model.
 
@@ -306,7 +299,6 @@ class LinearRegressorModel(BaseModel):
         - Any: Model training output.
         """
         trainer = Trainer(splits=splits,
-                          split_configs=split_configs,
                           trainer_configs=trainer_configs,
                           model=self.model,
                           pipe_model=self.pipe_model)
@@ -366,7 +358,7 @@ class RandomForestModel(BaseModel):
         else:
             raise ValueError(f"Unsupported preprocess strategy: {self.preprocess_strategy}")
 
-    def train(self, splits: Any, split_configs: Any, trainer_configs: Any) -> Any:
+    def train(self, splits: Any, trainer_configs: Any) -> Any:
         """
         Train the Random Forest model.
 
@@ -379,7 +371,6 @@ class RandomForestModel(BaseModel):
         - Any: Model training output.
         """
         trainer = Trainer(splits=splits,
-                          split_configs=split_configs,
                           trainer_configs=trainer_configs,
                           model=self.model,
                           pipe_model=self.pipe_model)
@@ -437,7 +428,7 @@ class MlpModel(BaseModel):
         else:
             raise ValueError(f"Unsupported preprocess strategy: {self.preprocess_strategy}")
 
-    def train(self, splits: Any, split_configs: Any, trainer_configs: Any) -> Any:
+    def train(self, splits: Any, trainer_configs: Any) -> Any:
         """
         Train the MLP model.
 
@@ -450,7 +441,6 @@ class MlpModel(BaseModel):
         - Any: Model training output.
         """
         trainer = Trainer(splits=splits,
-                          split_configs=split_configs,
                           trainer_configs=trainer_configs,
                           model=self.model,
                           pipe_model=self.pipe_model)

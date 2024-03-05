@@ -3,7 +3,6 @@ import logging
 import pandas as pd
 import numpy as np
 from scipy.stats import norm
-from conf.config import Cfg
 import conf.config as conf
 from typing import Dict, Any, Tuple, List
 
@@ -122,9 +121,9 @@ class OutlierHandler:
 
 
 class DataPreprocessor:
-    # TODO: INDICATE target column name of multiple
-    def __init__(self, df):
+    def __init__(self, df, fixed_columns=None):
         self.df = df
+        self.fixed_columns = fixed_columns
         self.init_checks()
 
     def init_checks(self) -> None:
@@ -134,9 +133,10 @@ class DataPreprocessor:
         Returns:
         None
         """
-        # CHECK 2
-        assert all(col in self.df.columns for col in Cfg.constants.fixed_columns)
-        logging.info('CHECK #1: All required columns are present.')
+        # CHECK 1
+        if self.fixed_columns is not None:
+            assert all(col in self.df.columns for col in self.fixed_columns)
+            logging.info('CHECK #1: All required columns are present.')
 
         # CHECK 2
         logging.info(f'CHECK #2: Missing values check: {self.df.isnull().any().any()}')
@@ -147,14 +147,14 @@ class DataPreprocessor:
         logging.info(f'CHECK #3: Outliers identified {outliers_dict}')
 
     def standardization(self):
-        pass
+        raise NotImplementedError
 
     def execute_steps(self):
         return self.df
 
 
 class DataSpliter:
-    def __init__(self, configs: conf.SplitConfigs, df: pd.DataFrame):
+    def __init__(self, split_configs: conf.SplitConfigs, df: pd.DataFrame):
         """
         Initialize the DataSplitter with configuration and a DataFrame.
 
@@ -162,11 +162,20 @@ class DataSpliter:
         - configs (SplitConfigs): The configuration object.
         - df (pd.DataFrame): The input DataFrame.
         """
-        self.configs: conf.SplitConfigs = configs
+        self.split_configs: conf.SplitConfigs = split_configs
         self.df: pd.DataFrame = df
-        self.target_col_name: str = self.configs.target_col_name
-        self.train_size: float = self.configs.train_size
+        # self.target_col_name: str = self.split_configs.target_col_name
+        self.target_col_names: str = self.split_configs.target_col_names  # TEST
+        self.train_size: float = self.split_configs.train_size
         self.train_chunk: int = int(len(self.df) * self.train_size)
+
+    def get_feature_targets(self):
+        if len(self.target_col_names) == 0:
+            raise ValueError('The list of target column names cannot be empty. '
+                             'Please provide at least one target column name.')
+        features = self.df.drop(self.target_col_names, axis=1)
+        targets = self.df[self.target_col_names]
+        return features, targets
 
     # TODO: add different types of stratification
     def feature_target_split(self) -> Dict[str, pd.DataFrame]:
@@ -176,16 +185,23 @@ class DataSpliter:
         Returns:
         Dict[str, pd.DataFrame]: A dictionary containing splits for features and target.
         """
-        x, y = self.df.drop(self.target_col_name, axis=1), self.df[self.target_col_name]
 
-        class_counts = y.value_counts()
-        min_samples = class_counts.min()
+        x, y = self.get_feature_targets()
 
-        if min_samples < 2:
-            logging.warning(f"The least populated class has only {min_samples} member(s), which is too few.")
+        if len(self.target_col_names) > 1:
+
             x_train, x_test, y_train, y_test = train_test_split(x, y, train_size=self.train_size)
+
         else:
-            x_train, x_test, y_train, y_test = train_test_split(x, y, train_size=self.train_size, stratify=y)
+
+            class_counts = y.value_counts()
+            min_samples = class_counts.min()
+
+            if min_samples < 2:
+                logging.warning(f"The least populated class has only {min_samples} member(s), which is too few.")
+                x_train, x_test, y_train, y_test = train_test_split(x, y, train_size=self.train_size)
+            else:
+                x_train, x_test, y_train, y_test = train_test_split(x, y, train_size=self.train_size, stratify=y)
 
         return {'x_train': x_train, 'y_train': y_train, 'x_test': x_test, 'y_test': y_test}
 
@@ -196,7 +212,9 @@ class DataSpliter:
         Returns:
         Dict[str, pd.DataFrame]: A dictionary containing splits for features (X) and target (Y).
         """
-        x, y = self.df.drop(self.target_col_name, axis=1), self.df[self.target_col_name]
+
+        x, y = self.get_feature_targets()
+
         return {'x': x, 'y': y}
 
     def train_test_splits_only(self) -> Dict[str, pd.DataFrame]:
@@ -219,14 +237,14 @@ class DataSpliter:
         Returns:
         SplitResults: The result of the split.
         """
-        if self.configs.split_policy == 'feature_target':
+        if self.split_configs.split_policy == 'feature_target':
             return SplitResults(self.feature_target_split())
-        elif self.configs.split_policy == 'x_y_splits_only':
+        elif self.split_configs.split_policy == 'x_y_splits_only':
             return SplitResults(self.x_y_splits_only())
-        elif self.configs.split_policy == 'train_test_splits_only':
+        elif self.split_configs.split_policy == 'train_test_splits_only':
             return SplitResults(self.train_test_splits_only())
         else:
-            raise ValueError(f"Unsupported split_policy: {self.configs.split_policy}")
+            raise ValueError(f"Unsupported split_policy: {self.split_configs.split_policy}")
 
 
 class SplitResults:

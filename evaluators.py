@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from typing import Any
-from conf.config import SplitConfigs, TrainerConfigs
+from conf.config import TrainerConfigs
 import utils as ut
 
 
@@ -14,8 +14,8 @@ class Evaluator:
         trainer_configs (Any): Trainer configurations for model training.
     """
 
-    def __init__(self, split_configs: SplitConfigs, trainer_configs: TrainerConfigs):
-        self.split_configs = split_configs
+    def __init__(self,  trainer_configs: TrainerConfigs):
+        self.split_configs = trainer_configs.scorer.split_configs
         self.trainer_configs = trainer_configs
 
     def evaluate(self, model: Any, splits: Any) -> ut.DictResultHolder:

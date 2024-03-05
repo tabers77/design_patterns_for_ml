@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from sklearn.datasets import load_diabetes
+from sklearn.datasets import load_diabetes, make_regression
 from typing import Optional
 
 
@@ -29,3 +29,34 @@ class DataLoder:
             data.loc[idx, features_columns] = np.nan
 
         return data
+
+    @staticmethod
+    def load_multi_target_df(with_missing_values: Optional[bool] = False):
+        # Set random seed for reproducibility
+        np.random.seed(0)
+
+        # Generate synthetic regression dataset
+        n_samples = 100  # Number of samples
+        n_features = 5  # Number of features
+        n_targets = 2  # Number of target columns
+
+        # Generate features and targets
+        X, y = make_regression(n_samples=n_samples, n_features=n_features + n_targets,
+                               n_targets=n_targets, noise=0.1)
+
+        # Separate features and targets
+        features = X[:, :n_features]  # Extract the first 5 columns as features
+        targets = X[:, n_features:]  # Extract the last 2 columns as targets
+
+        # Create a DataFrame
+        df = pd.DataFrame(np.hstack([features, targets]),
+                          columns=[f"feature_{i}" for i in range(n_features)] + [f"target_{i}" for i in
+                                                                                 range(n_targets)])
+
+        if with_missing_values:
+            # Introduce missing values randomly to the features
+            features_columns = [f"feature_{i}" for i in range(n_features)]
+            idx = np.random.choice(df.index, size=20, replace=False)
+            df.loc[idx, features_columns] = np.nan
+
+        return df
