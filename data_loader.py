@@ -10,15 +10,6 @@ class DataLoader:
     @staticmethod
     @lru_cache(maxsize=10)
     def load_diabetes_data(with_missing_values: Optional[bool] = False) -> pd.DataFrame:
-        """
-        Load the Diabetes dataset with optional caching to improve load times.
-
-        Parameters:
-        - with_missing_values (bool): If True, introduce missing values to the features.
-
-        Returns:
-        pd.DataFrame: DataFrame containing the feature and target variables.
-        """
         diabetes_data = load_diabetes()
         data = pd.DataFrame(diabetes_data.data, columns=diabetes_data.feature_names)
         data['target'] = diabetes_data.target

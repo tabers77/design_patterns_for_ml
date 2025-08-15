@@ -57,6 +57,5 @@ class Cfg:
     constants: Constants = Constants()
     scoring_funcs: ScoringFuncs = ScoringFuncs()
 
-# Secure sensitive configurations
 def load_sensitive_config(key: str) -> Optional[str]:
-    return os.getenv(key, None)  # Explicitly handle default None for missing environment variables
+    return os.getenv(key)  # Removed explicit None as it is the default for getenv when the key is not found.

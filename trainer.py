@@ -31,7 +31,7 @@ class Trainer:
             if self.trainer_configs.preprocess_strategy == 'pipeline':
                 self.pipe_model.fit(self.splits.x_train, self.splits.y_train)
                 self.pipe_model.name = self.model.name
-                logging.info("Pipeline model trained successfully.")
+                logging.info(f"Pipeline model {self.model.name} trained successfully.")
                 return self.pipe_model
 
             elif self.trainer_configs.preprocess_strategy == 'custom':
@@ -56,7 +56,7 @@ class Trainer:
                         f'you are using:{self.custom_scoring} . Error {e}')
 
                 self.pipe_model.name = self.model.name
-                logging.info("Pipeline cross-validation completed successfully.")
+                logging.info(f"Pipeline cross-validation for model {self.model.name} completed successfully.")
                 return cv_results
 
             elif self.trainer_configs.preprocess_strategy == 'custom':
@@ -107,7 +107,7 @@ class Trainer:
                         f'you are using:{self.custom_scoring} . Error {e}')
 
                 self.pipe_model.name = self.model.name
-                logging.info("Neural network pipeline cross-validation completed successfully.")
+                logging.info(f"Neural network pipeline cross-validation for model {self.model.name} completed successfully.")
                 return cv_results
 
             elif self.trainer_configs.preprocess_strategy == 'custom':

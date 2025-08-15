@@ -13,16 +13,16 @@ CV_FOLDS = 5
 IMPUTER_STRATEGY = "median"
 
 @pytest.fixture
-def data_loader():
+def data_loader() -> dl.DataLoader:
     return dl.DataLoader()
 
 @pytest.fixture
-def data_preprocessor(data_loader):
+def data_preprocessor(data_loader: dl.DataLoader) -> dp.DataPreprocessor:
     df = data_loader.load_diabetes_data(with_missing_values=False)
     return dp.DataPreprocessor(df=df)
 
 @pytest.fixture
-def model_factory():
+def model_factory() -> ModelFactory:
     return ModelFactory()
 
 @pytest.mark.parametrize("split_policy", ['feature_target', 'x_y_splits_only'])
@@ -60,9 +60,8 @@ def test_regression_models(data_preprocessor: dp.DataPreprocessor, model_factory
     assert isinstance(results_rf.mean_squared_error, float)
     assert isinstance(results_lr.mean_squared_error, float)
 
-    # Integration tests
 @pytest.mark.integration
-def test_full_pipeline(data_loader, data_preprocessor, model_factory):
+def test_full_pipeline(data_loader: dl.DataLoader, data_preprocessor: dp.DataPreprocessor, model_factory: ModelFactory) -> None:
     df = data_loader.load_diabetes_data(with_missing_values=True)
     preprocessor = dp.DataPreprocessor(df=df)
     preprocessed_df = preprocessor.execute_steps()

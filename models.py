@@ -50,7 +50,7 @@ class BaseModel:
     @staticmethod
     def sanity_checks(data: Any, preprocess_strategy: str) -> None:
         if data.isnull().any().any() and preprocess_strategy == 'custom':
-            raise ValueError('Data cant contain missing values with custom preprocess_strategy')
+            raise ValueError('Data cannot contain missing values with custom preprocess_strategy')
 
 
 class LinearRegressorModel(BaseModel):
