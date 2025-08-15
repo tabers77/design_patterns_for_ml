@@ -9,8 +9,10 @@ def main():
     split_configs = cfg.SplitConfigs(target_col_name='target', train_size=0.80, cv=5, split_policy='x_y_splits_only')
     trainer_configs = cfg.TrainerConfigs(preprocess_strategy='pipeline', custom_scoring=None, input_dim=5)
 
-    df = dl.DataLoder().load_diabetes_data(with_missing_values=True)
-    preprocessed_df = dp.DataPreprocessor(df=df).execute_steps()
+    data_loader = dl.DataLoader()
+    df = data_loader.load_diabetes_data(with_missing_values=True)
+    data_preprocessor = dp.DataPreprocessor(df=df)
+    preprocessed_df = data_preprocessor.execute_steps()
 
     model_factory = ModelFactory()
     model_pipe = model_factory.create_regressor_model(model_type='random_forest', trainer_configs=trainer_configs)

@@ -1,7 +1,9 @@
 from sklearn.model_selection import cross_validate
+import logging
 from conf import config as cfg
 from typing import Any, Optional, Union, Dict
 
+logging.basicConfig(level=logging.INFO)
 
 class Trainer:
     """
@@ -29,38 +31,39 @@ class Trainer:
             if self.trainer_configs.preprocess_strategy == 'pipeline':
                 self.pipe_model.fit(self.splits.x_train, self.splits.y_train)
                 self.pipe_model.name = self.model.name
+                logging.info("Pipeline model trained successfully.")
                 return self.pipe_model
 
             elif self.trainer_configs.preprocess_strategy == 'custom':
                 self.model.fit(self.splits.x_train, self.splits.y_train)
+                logging.info("Custom model trained successfully.")
                 return self.model
 
         elif self.split_configs.split_policy == 'x_y_splits_only':
 
-            # Observe that model evaluation is already performed here:
             scoring_metrics = list(self.custom_scoring.keys()) if self.custom_scoring is not None else \
                 list(cfg.Cfg.scoring_funcs.regression_scoring_funcs_cv.keys())
 
             if self.trainer_configs.preprocess_strategy == 'pipeline':
 
-                # Perform cross-validation
                 try:
                     cv_results = cross_validate(self.pipe_model, self.splits.x, self.splits.y, cv=self.split_configs.cv,
                                                 scoring=scoring_metrics)
                 except Exception as e:
+                    logging.error(f'Error during cross-validation: {e}')
                     raise ValueError(
                         f'If using pipeline & cross validation check that you use the correct scoring parameters, '
                         f'you are using:{self.custom_scoring} . Error {e}')
 
                 self.pipe_model.name = self.model.name
+                logging.info("Pipeline cross-validation completed successfully.")
                 return cv_results
 
             elif self.trainer_configs.preprocess_strategy == 'custom':
 
-                # Perform cross-validation
                 cv_results = cross_validate(self.model, self.splits.x, self.splits.y, cv=self.split_configs.cv,
                                             scoring=scoring_metrics)
-
+                logging.info("Custom cross-validation completed successfully.")
                 return cv_results
 
         else:
@@ -77,9 +80,6 @@ class Trainer:
         if self.split_configs.split_policy == 'feature_target':
             if self.trainer_configs.preprocess_strategy == 'pipeline':
                 raise NotImplementedError
-                # self.pipe_model.fit(self.splits.x_train, self.splits.y_train)
-                # self.pipe_model.name = self.model.name
-                # return self.pipe_model
 
             elif self.trainer_configs.preprocess_strategy == 'custom':
                 self.model.fit(self.splits.x_train,
@@ -87,34 +87,34 @@ class Trainer:
                                epochs=50,
                                batch_size=32,
                                validation_data=(self.splits.x_test, self.splits.y_test), verbose=2)
+                logging.info("Neural network trained successfully.")
                 return self.model
 
         elif self.split_configs.split_policy == 'x_y_splits_only':
 
-            # Observe that model evaluation is already performed here:
             scoring_metrics = list(self.custom_scoring.keys()) if self.custom_scoring is not None else \
                 list(cfg.Cfg.scoring_funcs.regression_scoring_funcs_cv.keys())
 
             if self.trainer_configs.preprocess_strategy == 'pipeline':
 
-                # Perform cross-validation
                 try:
                     cv_results = cross_validate(self.pipe_model, self.splits.x, self.splits.y, cv=self.split_configs.cv,
                                                 scoring=scoring_metrics)
                 except Exception as e:
+                    logging.error(f'Error during neural network cross-validation: {e}')
                     raise ValueError(
                         f'If using pipeline & cross validation check that you use the correct scoring parameters, '
                         f'you are using:{self.custom_scoring} . Error {e}')
 
                 self.pipe_model.name = self.model.name
+                logging.info("Neural network pipeline cross-validation completed successfully.")
                 return cv_results
 
             elif self.trainer_configs.preprocess_strategy == 'custom':
 
-                # Perform cross-validation
                 cv_results = cross_validate(self.model, self.splits.x, self.splits.y, cv=self.split_configs.cv,
                                             scoring=scoring_metrics)
-
+                logging.info("Neural network custom cross-validation completed successfully.")
                 return cv_results
 
         else:

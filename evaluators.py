@@ -44,10 +44,8 @@ class Evaluator:
         container = dict()
 
         for eval_metric_name, eval_metric in scoring_funcs.items():
-            if 'neg' in eval_metric_name:
-                eval_metric_name = '_'.join(eval_metric_name.split('_')[1:])
-
-            container[eval_metric_name] = round(eval_metric(splits.y_test, predictions), 2)
+            eval_metric_name_fixed = '_'.join(eval_metric_name.split('_')[1:])
+            container[eval_metric_name_fixed] = round(eval_metric(splits.y_test, predictions), 2)
 
         results_table = pd.DataFrame(container, index=[0])
         results_table['model_name'] = model.name
@@ -68,5 +66,7 @@ class RegressionResults:
         Parameters:
         - results: A dictionary containing evaluation results.
         """
-        for eval_metric, result in results.items():
-            setattr(self, eval_metric, result)
+        self.results = results
+
+    def __getattr__(self, item):
+        return self.results.get(item)

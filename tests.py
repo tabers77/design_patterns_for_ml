@@ -8,24 +8,23 @@ from sklearn.preprocessing import StandardScaler
 import sklearn.metrics as m
 from typing import Optional, Dict, Any
 
+TRAIN_SIZE = 0.80
+CV_FOLDS = 5
+IMPUTER_STRATEGY = "median"
 
 @pytest.fixture
 def data_loader():
     return dl.DataLoader()
-
 
 @pytest.fixture
 def data_preprocessor(data_loader):
     df = data_loader.load_diabetes_data(with_missing_values=False)
     return dp.DataPreprocessor(df=df)
 
-
 @pytest.fixture
 def model_factory():
     return ModelFactory()
 
-
-# Adapted test cases based on variations
 @pytest.mark.parametrize("split_policy", ['feature_target', 'x_y_splits_only'])
 @pytest.mark.parametrize("preprocess_strategy", ['custom', 'pipeline'])
 @pytest.mark.parametrize("custom_scoring", [None, {'neg_mean_squared_error': m.mean_squared_error}])
@@ -33,26 +32,12 @@ def model_factory():
 def test_regression_models(data_preprocessor: dp.DataPreprocessor, model_factory: ModelFactory,
                            split_policy: str, preprocess_strategy: str, custom_scoring: Optional[Dict[str, Any]],
                            with_missing_values: bool) -> None:
-    """
-    Test function for regression models.
-
-    Parameters:
-    - data_preprocessor: A DataPreprocessor instance.
-    - model_factory: A ModelFactory instance.
-    - split_policy: Split policy for data splitting.
-    - preprocess_strategy: Preprocessing strategy.
-    - custom_scoring: Custom scoring dictionary.
-    - with_missing_values: Flag indicating whether to include missing values.
-
-    Returns:
-    - None
-    """
-    split_configs = cfg.SplitConfigs(target_col_name='target', train_size=0.80, cv=5, split_policy=split_policy)
+    split_configs = cfg.SplitConfigs(target_col_name='target', train_size=TRAIN_SIZE, cv=CV_FOLDS, split_policy=split_policy)
     trainer_configs = cfg.TrainerConfigs(preprocess_strategy=preprocess_strategy, custom_scoring=custom_scoring,
                                          input_dim=5)
 
     if with_missing_values:
-        pipe_steps = [('imputer', SimpleImputer(strategy="median")), ('scaler', StandardScaler())]
+        pipe_steps = [('imputer', SimpleImputer(strategy=IMPUTER_STRATEGY)), ('scaler', StandardScaler())]
     else:
         pipe_steps = None
 
