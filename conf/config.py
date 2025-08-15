@@ -3,6 +3,7 @@ from dataclasses_json import dataclass_json
 from conf.constants import Constants
 import sklearn.metrics as m
 from typing import Optional, Dict, Callable
+import os
 
 @dataclass_json
 @dataclass
@@ -55,3 +56,7 @@ class ScoringFuncs:
 class Cfg:
     constants: Constants = Constants()
     scoring_funcs: ScoringFuncs = ScoringFuncs()
+
+# Secure sensitive configurations
+def load_sensitive_config(key: str) -> Optional[str]:
+    return os.getenv(key)

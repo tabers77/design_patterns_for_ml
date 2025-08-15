@@ -54,7 +54,7 @@ class BaseModel:
 
 
 class LinearRegressorModel(BaseModel):
-    def __init__(self, trainer_configs: Any):
+    def __init__(self, trainer_configs: cfg.TrainerConfigs):
         self.pipe_model: Optional[Pipeline] = None
         self.preprocess_strategy: str = trainer_configs.preprocess_strategy
         self.model: LinearRegression = LinearRegression()
@@ -82,7 +82,7 @@ class LinearRegressorModel(BaseModel):
 
 
 class RandomForestModel(BaseModel):
-    def __init__(self, trainer_configs: Any):
+    def __init__(self, trainer_configs: cfg.TrainerConfigs):
         self.pipe_model: Optional[Pipeline] = None
         self.preprocess_strategy: str = trainer_configs.preprocess_strategy
         model_configs: Dict[str, Any] = cfg.config_manager.get_config(model_name='RandomForestRegressor')

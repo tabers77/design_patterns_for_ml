@@ -5,7 +5,7 @@ from models import ModelFactory
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler
 
-def main():
+def main() -> None:
     split_configs = cfg.SplitConfigs(target_col_name='target', train_size=0.80, cv=5, split_policy='x_y_splits_only')
     trainer_configs = cfg.TrainerConfigs(preprocess_strategy='pipeline', custom_scoring=None, input_dim=5)
 

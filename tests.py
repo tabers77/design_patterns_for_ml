@@ -53,3 +53,9 @@ def test_regression_models(data_preprocessor: dp.DataPreprocessor, model_factory
 
     assert results_rf.mean_squared_error is not None
     assert results_lr.mean_squared_error is not None
+
+    # Additional tests for edge cases
+    assert results_rf.mean_squared_error >= 0
+    assert results_lr.mean_squared_error >= 0
+    assert isinstance(results_rf.mean_squared_error, float)
+    assert isinstance(results_lr.mean_squared_error, float)

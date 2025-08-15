@@ -48,7 +48,7 @@ class Evaluator:
             container[eval_metric_name_fixed] = round(eval_metric(splits.y_test, predictions), 2)
 
         results_table = pd.DataFrame(container, index=[0])
-        results_table['model_name'] = model.name
+        results_table['model_name'] = model.__class__.__name__
         container['results_table'] = results_table
 
         return RegressionResults(container)
