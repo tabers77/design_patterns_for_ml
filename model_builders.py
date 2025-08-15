@@ -1,13 +1,11 @@
 from keras import Sequential
-from keras.src.layers import Dense
+from keras.layers import Dense
 from conf.config import TrainerConfigs
 
-
-# BUILDER PATTERN
 class MlpModelBuilder:
     """
-     Builder class for constructing Multi-Layer Perceptron (MLP) models.
-     """
+    Builder class for constructing Multi-Layer Perceptron (MLP) models.
+    """
 
     def __init__(self, trainer_configs: TrainerConfigs):
         """
@@ -40,6 +38,6 @@ class MlpModelBuilder:
 
     def set_params(self):
         """
-          Set parameters for the model.
-          """
+        Set parameters for the model.
+        """
         pass

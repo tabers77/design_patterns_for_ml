@@ -2,20 +2,20 @@ from abc import ABC
 from time import time
 from models import BaseModel
 import logging
-from typing import Any
+from typing import Any, Optional
 
 logging.basicConfig(level=logging.INFO)
 
 
 class TimerDecorator(BaseModel, ABC):
-    def __init__(self, base_model):
+    def __init__(self, base_model: BaseModel):
         self._base_model = base_model
 
     def execute_pipeline_steps(
-            self, data: Any, split_configs: Any, trainer_configs: Any, pipe_steps: Any = None
+            self, data: Any, split_configs: Any, trainer_configs: Any, pipe_steps: Optional[Any] = None
     ) -> Any:
         start_time = time()
         result = self._base_model.execute_pipeline_steps(data, split_configs, trainer_configs, pipe_steps)
         end_time = time()
-        logging.info(f"Execution time: {end_time - start_time} seconds")
+        logging.info(f"Execution time: {end_time - start_time:.2f} seconds")
         return result

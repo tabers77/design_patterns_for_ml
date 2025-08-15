@@ -86,7 +86,7 @@ class RandomForestModel(BaseModel):
         self.pipe_model: Optional[Pipeline] = None
         self.preprocess_strategy: str = trainer_configs.preprocess_strategy
         model_configs: Dict[str, Any] = cfg.config_manager.get_config(model_name='RandomForestRegressor')
-        self.model: RandomForestRegressor = RandomForestRegressor().set_params(**model_configs)
+        self.model: RandomForestRegressor = RandomForestRegressor(**model_configs)
         self.model.name: str = 'RandomForestRegressor'
 
     @staticmethod

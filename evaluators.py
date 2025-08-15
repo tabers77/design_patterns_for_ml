@@ -70,3 +70,6 @@ class RegressionResults:
 
     def __getattr__(self, item):
         return self.results.get(item)
+
+    def __str__(self):
+        return str(self.results)

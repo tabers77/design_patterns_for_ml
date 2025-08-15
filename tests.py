@@ -59,3 +59,22 @@ def test_regression_models(data_preprocessor: dp.DataPreprocessor, model_factory
     assert results_lr.mean_squared_error >= 0
     assert isinstance(results_rf.mean_squared_error, float)
     assert isinstance(results_lr.mean_squared_error, float)
+
+    # Integration tests
+@pytest.mark.integration
+def test_full_pipeline(data_loader, data_preprocessor, model_factory):
+    df = data_loader.load_diabetes_data(with_missing_values=True)
+    preprocessor = dp.DataPreprocessor(df=df)
+    preprocessed_df = preprocessor.execute_steps()
+
+    model = model_factory.create_regressor_model(model_type='random_forest', trainer_configs=cfg.TrainerConfigs(
+        preprocess_strategy='pipeline', custom_scoring=None, input_dim=5))
+    split_configs = cfg.SplitConfigs(target_col_name='target', train_size=TRAIN_SIZE, cv=CV_FOLDS, split_policy='feature_target')
+    pipe_steps = [('imputer', SimpleImputer(strategy=IMPUTER_STRATEGY)), ('scaler', StandardScaler())]
+
+    results = model.execute_pipeline_steps(data=preprocessed_df, split_configs=split_configs, trainer_configs=cfg.TrainerConfigs(
+        preprocess_strategy='pipeline', custom_scoring=None, input_dim=5), pipe_steps=pipe_steps)
+
+    assert results.mean_squared_error is not None
+    assert results.mean_squared_error >= 0
+    assert isinstance(results.mean_squared_error, float)

@@ -59,4 +59,4 @@ class Cfg:
 
 # Secure sensitive configurations
 def load_sensitive_config(key: str) -> Optional[str]:
-    return os.getenv(key)
+    return os.getenv(key, None)  # Explicitly handle default None for missing environment variables

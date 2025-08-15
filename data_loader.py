@@ -30,3 +30,7 @@ class DataLoader:
             data.loc[idx, features_columns] = np.nan
 
         return data
+
+    @staticmethod
+    def clear_cache():
+        DataLoader.load_diabetes_data.cache_clear()

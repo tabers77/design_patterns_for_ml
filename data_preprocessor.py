@@ -8,20 +8,9 @@ from typing import Dict, Any, Tuple, List
 
 logging.basicConfig(level=logging.INFO)
 
-
 class OutlierHandler:
     @staticmethod
     def is_distribution_normal(col: pd.Series) -> bool:
-        """
-        Check if the distribution of a column is normal.
-
-        Parameters:
-        - col (pd.Series): The input column.
-
-        Returns:
-        bool: True if the distribution is normal, False otherwise.
-        """
-
         mean = col.mean()
         sd = col.std()
 
@@ -40,23 +29,10 @@ class OutlierHandler:
         if 0.99 <= three_sd < 1:
             counter += 1
 
-        if counter == 3:
-            return True
-        else:
-            return False
+        return counter == 3
 
     @staticmethod
     def get_outliers_std(df: pd.DataFrame, column: str) -> Tuple[float, List[float]]:
-        """
-        Get the percentage of outliers and the list of outliers using the standard deviation method.
-
-        Parameters:
-        - df (pd.DataFrame): The input DataFrame.
-        - column (str): The column name.
-
-        Returns:
-        Tuple[float, List[float]]: The percentage of outliers and the list of outliers.
-        """
         len_df = len(df)
 
         q25, q75 = np.percentile(df[column], 25), np.percentile(df[column], 75)
@@ -71,16 +47,6 @@ class OutlierHandler:
 
     @staticmethod
     def get_outliers_z_score(df: pd.DataFrame, column: str) -> Tuple[float, List[float]]:
-        """
-        Get the percentage of outliers and the list of outliers using the Z-score method.
-
-        Parameters:
-        - df (pd.DataFrame): The input DataFrame.
-        - column (str): The column name.
-
-        Returns:
-        Tuple[float, List[float]]: The percentage of outliers and the list of outliers.
-        """
         len_df = len(df)
         outliers = []
         threshold = 3
@@ -90,91 +56,50 @@ class OutlierHandler:
             z_score = (i - mean) / std
             if np.abs(z_score) > threshold:
                 outliers.append(i)
-        # print(f'Identified outliers for {column}: {round(len(outliers) / len_df * 100, 2)}%')
         pct_outliers = round(len(outliers) / len_df * 100, 2)
 
         return pct_outliers, outliers
 
     @staticmethod
     def identify_outliers_in_dataframe(df: pd.DataFrame) -> Dict[str, Tuple[float, List[float]]]:
-        """
-        Identify outliers in a DataFrame for each column.
-
-        Parameters:
-        - df (pd.DataFrame): The input DataFrame.
-
-        Returns:
-        Dict[str, Tuple[float, List[float]]]: A dictionary containing column names and corresponding
-        percentages of outliers and lists of outliers.
-        """
-        outliers_dict = dict()
-        outlier_handler = OutlierHandler()
+        outliers_dict = {}
         for col in df.columns:
-            if not outlier_handler.is_distribution_normal(df[col]):
-                pct_outliers, outliers = outlier_handler.get_outliers_std(df, col)
+            if not OutlierHandler.is_distribution_normal(df[col]):
+                pct_outliers, outliers = OutlierHandler.get_outliers_std(df, col)
             else:
-                pct_outliers, outliers = outlier_handler.get_outliers_z_score(df, col)
+                pct_outliers, outliers = OutlierHandler.get_outliers_z_score(df, col)
 
             outliers_dict[col] = (pct_outliers, outliers)
 
         return outliers_dict
 
-
 class DataPreprocessor:
-    # TODO: INDICATE target column name of multiple
-    def __init__(self, df):
+    def __init__(self, df: pd.DataFrame):
         self.df = df
         self.init_checks()
 
     def init_checks(self) -> None:
-        """
-        Perform initialization checks on the DataFrame.
-
-        Returns:
-        None
-        """
-        # CHECK 2
         assert all(col in self.df.columns for col in Cfg.constants.fixed_columns)
         logging.info('CHECK #1: All required columns are present.')
-
-        # CHECK 2
         logging.info(f'CHECK #2: Missing values check: {self.df.isnull().any().any()}')
-
-        # CHECK 3
-        outlier_handler = OutlierHandler()
-        outliers_dict = outlier_handler.identify_outliers_in_dataframe(self.df)
+        outliers_dict = OutlierHandler.identify_outliers_in_dataframe(self.df)
         logging.info(f'CHECK #3: Outliers identified {outliers_dict}')
 
     def standardization(self):
         pass
 
-    def execute_steps(self):
+    def execute_steps(self) -> pd.DataFrame:
         return self.df
-
 
 class DataSpliter:
     def __init__(self, configs: Any, df: pd.DataFrame):
-        """
-        Initialize the DataSplitter with configuration and a DataFrame.
-
-        Parameters:
-        - configs (Any): The configuration object.
-        - df (pd.DataFrame): The input DataFrame.
-        """
         self.configs = configs
         self.df = df
         self.target_col_name = self.configs.target_col_name
         self.train_size = self.configs.train_size
         self.train_chunk = int(len(self.df) * self.train_size)
 
-    # TODO: add different types of stratification
     def feature_target_split(self) -> Dict[str, pd.DataFrame]:
-        """
-        Perform feature-target split on the DataFrame.
-
-        Returns:
-        Dict[str, pd.DataFrame]: A dictionary containing splits for features and target.
-        """
         x, y = self.df.drop(self.target_col_name, axis=1), self.df[self.target_col_name]
 
         class_counts = y.value_counts()
@@ -189,22 +114,10 @@ class DataSpliter:
         return {'x_train': x_train, 'y_train': y_train, 'x_test': x_test, 'y_test': y_test}
 
     def x_y_splits_only(self) -> Dict[str, pd.DataFrame]:
-        """
-        Perform feature-target split on the DataFrame and return only X and Y.
-
-        Returns:
-        Dict[str, pd.DataFrame]: A dictionary containing splits for features (X) and target (Y).
-        """
         x, y = self.df.drop(self.target_col_name, axis=1), self.df[self.target_col_name]
         return {'x': x, 'y': y}
 
     def train_test_splits_only(self) -> Dict[str, pd.DataFrame]:
-        """
-        Perform train-test split on the DataFrame.
-
-        Returns:
-        Dict[str, pd.DataFrame]: A dictionary containing splits for training and testing.
-        """
         train, test = self.df[:self.train_chunk], self.df[self.train_chunk:]
         return {'train': train, 'test': test}
 
@@ -212,12 +125,6 @@ class DataSpliter:
         pass
 
     def execute_split_steps(self) -> 'SplitResults':
-        """
-        Execute splitting steps based on the configured policy.
-
-        Returns:
-        SplitResults: The result of the split.
-        """
         if self.configs.split_policy == 'feature_target':
             return SplitResults(self.feature_target_split())
         elif self.configs.split_policy == 'x_y_splits_only':
@@ -227,18 +134,7 @@ class DataSpliter:
         else:
             raise ValueError(f"Unsupported split_policy: {self.configs.split_policy}")
 
-
 class SplitResults:
-    """
-    Class for holding split results.
-    """
-
     def __init__(self, splits: Dict[str, Any]):
-        """
-        Initialize the SplitResults with a dictionary of split results.
-
-        Parameters:
-        - splits: A dictionary containing split results.
-        """
         for split_name, split_value in splits.items():
             setattr(self, split_name, split_value)
