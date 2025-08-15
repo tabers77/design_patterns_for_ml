@@ -11,7 +11,7 @@ from typing import Optional, Dict, Any
 
 @pytest.fixture
 def data_loader():
-    return dl.DataLoder()
+    return dl.DataLoader()
 
 
 @pytest.fixture

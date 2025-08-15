@@ -5,12 +5,10 @@ from models import ModelFactory
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler
 
-split_configs = cfg.SplitConfigs(target_col_name='target', train_size=0.80, cv=5, split_policy='x_y_splits_only')
+def main():
+    split_configs = cfg.SplitConfigs(target_col_name='target', train_size=0.80, cv=5, split_policy='x_y_splits_only')
+    trainer_configs = cfg.TrainerConfigs(preprocess_strategy='pipeline', custom_scoring=None, input_dim=5)
 
-trainer_configs = cfg.TrainerConfigs(preprocess_strategy='pipeline', custom_scoring=None,
-                                     input_dim=5)  # {'neg_mean_squared_error': m.mean_squared_error}
-
-if __name__ == '__main__':
     df = dl.DataLoder().load_diabetes_data(with_missing_values=True)
     preprocessed_df = dp.DataPreprocessor(df=df).execute_steps()
 
@@ -24,3 +22,6 @@ if __name__ == '__main__':
                                                     ('imputer', SimpleImputer(strategy="median")),
                                                     ('scaler', StandardScaler())])
     print(results)
+
+if __name__ == '__main__':
+    main()
